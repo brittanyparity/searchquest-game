@@ -1,0 +1,96 @@
+Product Requirements Document
+
+Game Name
+
+SearchQuest
+
+Target Platform
+
+- Mobile Web
+
+- TikTok traffic
+
+- Future: Facebook Instant Games
+
+Engine
+
+- Phaser 3
+
+Gameplay Loop
+
+- Player loads game
+
+- Scene shows hidden objects
+
+- Player drags around image
+
+- Player zooms to inspect areas
+
+- Player taps objects to collect
+
+- Timer counts down
+
+- Points awarded
+
+Core Mechanics
+
+Camera
+
+- Drag panning
+
+- Pinch zoom
+
+- Scroll wheel zoom
+
+- Camera boundaries
+
+Objects
+
+- Click detection
+
+- Mark as found
+
+- Update gallery
+
+UI
+Top bar
+
+- timer
+
+- progress bar
+
+- settings icon
+
+Bottom bar
+
+- instructions
+
+- points
+
+- object gallery
+
+- hint button
+
+Game Session Length
+1–2 minutes
+
+Optimized for short attention spans.
+
+Performance Goals
+
+Initial Load Size
+
+< 5MB
+
+Load Time
+
+< 2 seconds
+Monetization
+
+Future options
+
+rewarded ads
+
+banner ads
+
+sponsored scenes
