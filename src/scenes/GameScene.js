@@ -6,12 +6,16 @@ export class GameScene extends Phaser.Scene {
 
     create() {
         const camera = this.cameras.main;
+        this.setupLayout();
+
+        // Listen for resize events
+        this.scale.on('resize', this.handleResize, this);
 
         // --- World & background ------------------------------------------------
         const bg = this.add.image(0, 0, 'background').setOrigin(0, 0);
 
-        // Scale background to feel "large" relative to viewport while keeping aspect
-        const worldScale = 1.5;
+        // Keep scale at 1 so zoom math is easy to reason about.
+        const worldScale = 1;
         bg.setScale(worldScale);
 
         this.worldWidth = bg.displayWidth;
@@ -19,10 +23,20 @@ export class GameScene extends Phaser.Scene {
 
         camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
+        // Recalculate layout now that we know world dimensions
+        // This ensures bottom bar adjusts to show full image height
+        this.setupLayout();
+        // setupLayout() already calls updateZoom(), so minZoom is set
+        
         // --- Camera config -----------------------------------------------------
-        this.minZoom = 0.5;
-        this.maxZoom = 2.0;
-        camera.zoom = 1;
+        // Set initial zoom to minimum (fully zoomed out) and center the image
+        // Do this AFTER setupLayout so camera dimensions are correct
+        camera.zoom = this.minZoom;
+        
+        // Use a small delay to ensure camera dimensions are fully set
+        this.time.delayedCall(10, () => {
+            this.centerImageOnMinZoom();
+        });
 
         // Enable a couple of extra pointers so pinch works well on mobile
         this.input.addPointer(2);
@@ -94,29 +108,67 @@ export class GameScene extends Phaser.Scene {
 
         // --- Input: scroll wheel zoom (desktop) -------------------------------
         this.input.on('wheel', (pointer, objs, dx, dy, dz) => {
+            const camera = this.cameras.main;
+            
+            // Get the world position under the mouse pointer before zooming
+            const worldX = camera.scrollX + pointer.x / camera.zoom;
+            const worldY = camera.scrollY + pointer.y / camera.zoom;
+            
+            // More responsive zoom factor (smaller increments)
             const zoomDir = dy > 0 ? -1 : 1;
-            const zoomFactor = 1 + zoomDir * 0.1;
+            const zoomFactor = 1 + zoomDir * 0.05; // Reduced from 0.1 to 0.05 for finer control
 
+            const oldZoom = camera.zoom;
             camera.zoom = Phaser.Math.Clamp(
                 camera.zoom * zoomFactor,
                 this.minZoom,
                 this.maxZoom
             );
+            
+            // If we hit minZoom, center the image
+            if (camera.zoom === this.minZoom) {
+                this.centerImageOnMinZoom();
+            } else {
+                // Adjust camera position to keep the world point under the mouse fixed
+                const newZoom = camera.zoom;
+                camera.scrollX = worldX - pointer.x / newZoom;
+                camera.scrollY = worldY - pointer.y / newZoom;
+            }
 
             this.clampCameraToBounds();
         });
 
         // --- Hint system -------------------------------------------------------
         this.game.events.on('hintRequested', this.handleHintRequested, this);
+        
+        // Listen for requests to re-emit objects (in case UIScene missed the initial event)
+        this.game.events.on('requestObjects', () => {
+            console.log('🎮 GameScene received requestObjects, re-emitting objectsCreated...');
+            const objectsData = {
+                total: this.totalObjects,
+                objects: this.hiddenObjects.map((o) => ({
+                    id: o.id,
+                    key: o.key,
+                    name: o.name
+                }))
+            };
+            this.game.events.emit('objectsCreated', objectsData);
+        });
 
         // Notify UI about initial object set
-        this.game.events.emit('objectsCreated', {
-            total: this.totalObjects,
-            objects: this.hiddenObjects.map((o) => ({
-                id: o.id,
-                key: o.key,
-                name: o.name
-            }))
+        // Add a small delay to ensure UIScene listeners are set up
+        this.time.delayedCall(100, () => {
+            const objectsData = {
+                total: this.totalObjects,
+                objects: this.hiddenObjects.map((o) => ({
+                    id: o.id,
+                    key: o.key,
+                    name: o.name
+                }))
+            };
+            console.log('🎮 GameScene emitting objectsCreated event:', objectsData);
+            console.log('🎮 Event listeners count:', this.game.events.listeners('objectsCreated')?.length || 0);
+            this.game.events.emit('objectsCreated', objectsData);
         });
     }
 
@@ -188,7 +240,10 @@ export class GameScene extends Phaser.Scene {
     // -------------------------------------------------------------------------
 
     getActivePointers() {
-        return this.input.pointers.filter((p) => p && p.isDown);
+        const manager = this.input && this.input.manager;
+        const src = manager && manager.pointers ? manager.pointers : [];
+
+        return src.filter((p) => p && p.isDown);
     }
 
     handleDrag(pointer) {
@@ -213,14 +268,34 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        const delta = dist - this.lastPinchDistance;
-        const zoomFactor = 1 + delta * 0.002;
+        // Calculate the center point between the two pinch points
+        const pinchCenterX = (p1.x + p2.x) / 2;
+        const pinchCenterY = (p1.y + p2.y) / 2;
+        
+        // Get the world position at the pinch center before zooming
+        const worldX = camera.scrollX + pinchCenterX / camera.zoom;
+        const worldY = camera.scrollY + pinchCenterY / camera.zoom;
 
+        const delta = dist - this.lastPinchDistance;
+        // More responsive zoom factor
+        const zoomFactor = 1 + delta * 0.001; // Reduced from 0.002
+
+        const oldZoom = camera.zoom;
         camera.zoom = Phaser.Math.Clamp(
             camera.zoom * zoomFactor,
             this.minZoom,
             this.maxZoom
         );
+        
+        // If we hit minZoom, center the image
+        if (camera.zoom === this.minZoom) {
+            this.centerImageOnMinZoom();
+        } else {
+            // Adjust camera position to keep the world point under pinch center fixed
+            const newZoom = camera.zoom;
+            camera.scrollX = worldX - pinchCenterX / newZoom;
+            camera.scrollY = worldY - pinchCenterY / newZoom;
+        }
 
         this.lastPinchDistance = dist;
 
@@ -230,17 +305,27 @@ export class GameScene extends Phaser.Scene {
     clampCameraToBounds() {
         const camera = this.cameras.main;
 
-        const maxScrollX = Math.max(
-            0,
-            this.worldWidth - camera.width / camera.zoom
-        );
-        const maxScrollY = Math.max(
-            0,
-            this.worldHeight - camera.height / camera.zoom
-        );
+        // Calculate the visible world size at current zoom
+        const visibleWidth = camera.width / camera.zoom;
+        const visibleHeight = camera.height / camera.zoom;
 
-        camera.scrollX = Phaser.Math.Clamp(camera.scrollX, 0, maxScrollX);
-        camera.scrollY = Phaser.Math.Clamp(camera.scrollY, 0, maxScrollY);
+        // Calculate max scroll positions
+        // If world is smaller than visible area, allow centering (negative values are OK)
+        const maxScrollX = this.worldWidth - visibleWidth;
+        const maxScrollY = this.worldHeight - visibleHeight;
+
+        // Clamp to bounds, but allow negative values when image is smaller than viewport
+        // This allows centering and dragging even when image fits in viewport
+        camera.scrollX = Phaser.Math.Clamp(
+            camera.scrollX, 
+            Math.min(0, maxScrollX), 
+            Math.max(0, maxScrollX)
+        );
+        camera.scrollY = Phaser.Math.Clamp(
+            camera.scrollY, 
+            Math.min(0, maxScrollY), 
+            Math.max(0, maxScrollY)
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -280,8 +365,237 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    setupLayout(customWidth = null, customHeight = null) {
+        const camera = this.cameras.main;
+
+        // Layout: Now we have two containers (game and bottom bar) with spacing
+        // Use custom dimensions if provided (for resize), otherwise use camera dimensions
+        const fullWidth = customWidth !== null ? customWidth : camera.width;
+        const fullHeight = customHeight !== null ? customHeight : camera.height;
+        
+        // No top bar anymore
+        this.topBarHeight = 0;
+        
+        // Calculate the exact height needed to show full image at minZoom
+        let imageHeightAtMinZoom = 0;
+        if (this.worldWidth && this.worldHeight) {
+            // minZoom = cameraWidth / worldWidth (to fit width)
+            // Image height at minZoom = worldHeight * minZoom
+            // But we need to calculate what container height shows full image height
+            // If minZoom fits width: minZoom = containerWidth / worldWidth
+            // For height: containerHeight / minZoom = worldHeight
+            // So: containerHeight = worldHeight * minZoom = worldHeight * (containerWidth / worldWidth)
+            const minZoom = fullWidth / this.worldWidth;
+            imageHeightAtMinZoom = this.worldHeight * minZoom;
+        }
+        
+        // Set the game container height to match image height when zoomed out
+        if (this.worldWidth && this.worldHeight && imageHeightAtMinZoom > 0) {
+            this.playAreaHeight = imageHeightAtMinZoom;
+            
+            // Calculate available space for bottom bar
+            const viewportHeight = window.innerHeight;
+            const bodyPadding = 32; // 16px top + 16px bottom
+            const gap = 12; // Gap between containers
+            const availableForBottomBar = viewportHeight - bodyPadding - gap - this.playAreaHeight;
+            
+            // Bottom bar minimum height
+            const minBottomBarHeight = Math.max(80, viewportHeight * 0.08);
+            
+            // Use the larger of minimum or available space
+            if (availableForBottomBar >= minBottomBarHeight) {
+                this.bottomBarHeight = availableForBottomBar;
+            } else {
+                this.bottomBarHeight = minBottomBarHeight;
+            }
+        } else {
+            // Fallback if image not loaded yet
+            const minBottomBarHeight = Math.max(80, fullHeight * 0.08);
+            this.bottomBarHeight = minBottomBarHeight;
+            this.playAreaHeight = fullHeight - this.bottomBarHeight;
+        }
+
+        // Now the camera viewport uses the full game container (no offset needed)
+        // since the bars are in separate containers
+        camera.setViewport(0, 0, fullWidth, fullHeight);
+        
+        // Update camera bounds if world exists
+        // Note: setBounds might interfere with centering, so we'll handle bounds in clampCameraToBounds
+        // Don't set strict bounds here - let clampCameraToBounds handle it
+        if (this.worldWidth && this.worldHeight) {
+            // Set bounds but don't enforce them strictly (deadzone allows centering)
+            camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
+        }
+        
+        // Update DOM container heights
+        this.updateContainerHeights();
+        
+        // Emit event so UIScene can update bottom bar height
+        this.game.events.emit('layoutChanged', {
+            topBarHeight: 0, // No top bar
+            bottomBarHeight: this.bottomBarHeight,
+            playAreaHeight: this.playAreaHeight
+        });
+
+        // Recalculate zoom if world already exists
+        if (this.worldWidth && this.worldHeight) {
+            this.updateZoom();
+        }
+    }
+
+    updateContainerHeights() {
+        // Update the actual DOM container heights
+        const gameContainer = document.getElementById('game-container');
+        const bottomBarContainer = document.getElementById('bottom-bar-container');
+        
+        // Set game container max-height to match image height when zoomed out
+        if (gameContainer && this.playAreaHeight > 0) {
+            gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
+            // Also set height to ensure it works, but max-height will constrain it
+            gameContainer.style.height = `${this.playAreaHeight}px`;
+        }
+        
+        if (bottomBarContainer) {
+            bottomBarContainer.style.height = `${this.bottomBarHeight}px`;
+        }
+    }
+
+    handleResize(gameSize) {
+        const camera = this.cameras.main;
+        
+        // Preserve the current viewport focus (what part of the world is being viewed)
+        // Store normalized center position (0-1) in world coordinates
+        let worldCenterX = 0.5;
+        let worldCenterY = 0.5;
+        let currentZoom = camera.zoom;
+        const wasAtMinZoom = Math.abs(camera.zoom - this.minZoom) < 0.001;
+        
+        // Get the new dimensions from the resize event
+        // gameSize contains the new game dimensions after resize
+        const newWidth = gameSize ? gameSize.width : camera.width;
+        const newHeight = gameSize ? gameSize.height : camera.height;
+        
+        if (this.worldWidth && this.worldHeight) {
+            // Calculate what part of the world the camera center is viewing
+            // Use the current camera dimensions (before they update)
+            const cameraCenterX = camera.scrollX + camera.width / (2 * camera.zoom);
+            const cameraCenterY = camera.scrollY + camera.height / (2 * camera.zoom);
+            
+            worldCenterX = cameraCenterX / this.worldWidth;
+            worldCenterY = cameraCenterY / this.worldHeight;
+        }
+        
+        // Setup layout with the new dimensions
+        // This ensures the viewport is calculated with the correct new size
+        this.setupLayout(newWidth, newHeight);
+        
+        // Recalculate zoom bounds
+        if (this.worldWidth && this.worldHeight) {
+            const oldMinZoom = this.minZoom;
+            this.updateZoom();
+            
+            // Restore viewport focus
+            if (wasAtMinZoom || Math.abs(camera.zoom - this.minZoom) < 0.001) {
+                // If at min zoom, center the image
+                camera.zoom = this.minZoom;
+                this.centerImageOnMinZoom();
+            } else {
+                // Maintain proportional zoom level
+                const zoomRatio = (currentZoom - oldMinZoom) / (this.maxZoom - oldMinZoom);
+                camera.zoom = Phaser.Math.Clamp(
+                    this.minZoom + (this.maxZoom - this.minZoom) * zoomRatio,
+                    this.minZoom,
+                    this.maxZoom
+                );
+                
+                // If we're at minZoom, center the image instead of preserving position
+                if (Math.abs(camera.zoom - this.minZoom) < 0.001) {
+                    this.centerImageOnMinZoom();
+                } else {
+                    // Restore the same world position the user was viewing
+                    const newWorldCenterX = worldCenterX * this.worldWidth;
+                    const newWorldCenterY = worldCenterY * this.worldHeight;
+                    
+                    camera.scrollX = newWorldCenterX - camera.width / (2 * camera.zoom);
+                    camera.scrollY = newWorldCenterY - camera.height / (2 * camera.zoom);
+                }
+            }
+            
+            this.clampCameraToBounds();
+        }
+    }
+
+    updateZoom() {
+        const camera = this.cameras.main;
+        
+        const fitZoomX = camera.width / this.worldWidth;
+        const fitZoomY = camera.height / this.worldHeight;
+        // Use the smaller zoom to ensure both width and height fit
+        // This prevents the bottom of the image from being cut off
+        this.minZoom = Math.min(fitZoomX, fitZoomY);
+        this.maxZoom = this.minZoom * 8;
+
+        // Clamp current zoom to new bounds
+        const wasAtMinZoom = Math.abs(camera.zoom - this.minZoom) < 0.001;
+        camera.zoom = Phaser.Math.Clamp(camera.zoom, this.minZoom, this.maxZoom);
+        
+        // If we were at minZoom and still are, center the image
+        if (wasAtMinZoom && Math.abs(camera.zoom - this.minZoom) < 0.001) {
+            this.centerImageOnMinZoom();
+        }
+    }
+    
+    centerImageOnMinZoom() {
+        const camera = this.cameras.main;
+        
+        // Ensure we're at minZoom
+        camera.zoom = this.minZoom;
+        
+        // Verify camera dimensions are valid
+        if (camera.width === 0 || camera.height === 0) {
+            console.warn('Camera dimensions not set, retrying centering...');
+            this.time.delayedCall(50, () => this.centerImageOnMinZoom());
+            return;
+        }
+        
+        // Center the camera on the world center (image center) when at minZoom
+        const worldCenterX = this.worldWidth / 2;
+        const worldCenterY = this.worldHeight / 2;
+        
+        // Use Phaser's centerOn method which handles the calculation
+        camera.centerOn(worldCenterX, worldCenterY);
+        
+        // Then adjust if needed to ensure we don't show areas outside bounds
+        // Calculate the visible world size at current zoom
+        const visibleWidth = camera.width / camera.zoom;
+        const visibleHeight = camera.height / camera.zoom;
+        
+        // Check if we need to clamp
+        const maxScrollX = this.worldWidth - visibleWidth;
+        const maxScrollY = this.worldHeight - visibleHeight;
+        
+        // Only clamp if image is larger than viewport
+        if (maxScrollX >= 0) {
+            camera.scrollX = Phaser.Math.Clamp(camera.scrollX, 0, maxScrollX);
+        }
+        if (maxScrollY >= 0) {
+            camera.scrollY = Phaser.Math.Clamp(camera.scrollY, 0, maxScrollY);
+        }
+        
+        // Log for debugging
+        console.log('Centering image:', {
+            worldSize: { width: this.worldWidth, height: this.worldHeight },
+            cameraSize: { width: camera.width, height: camera.height },
+            zoom: camera.zoom,
+            visibleSize: { width: visibleWidth, height: visibleHeight },
+            scroll: { x: camera.scrollX, y: camera.scrollY },
+            worldCenter: { x: worldCenterX, y: worldCenterY }
+        });
+    }
+
     shutdown() {
         this.game.events.off('hintRequested', this.handleHintRequested, this);
+        this.scale.off('resize', this.handleResize, this);
     }
 }
 
