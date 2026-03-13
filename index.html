@@ -80,17 +80,19 @@
             }
 
             #game-container {
-                width: 100%;
-                max-width: 100%;
+                /* Width will be set dynamically to match image width */
+                min-width: 300px;
                 min-height: 300px;
                 /* Constrain to fit within body minus bottom bar */
-                flex: 1 1 auto;
+                flex: 0 0 auto; /* Don't grow or shrink, use fixed width */
                 max-height: calc(85dvh - 106px); /* 85% viewport minus bottom bar (100px) + gap (6px) */
                 max-height: calc(85vh - 106px); /* Fallback */
                 overflow: hidden;
             }
 
             #bottom-bar-container {
+                /* Width will be set dynamically to match game container width */
+                min-width: 300px;
                 min-height: 100px;
                 max-height: 100px;
                 height: 100px;
@@ -100,6 +102,7 @@
                 position: relative;
                 border-top: 4px solid #e5e7eb; /* Progress bar background at top */
                 flex-shrink: 0; /* Prevent bottom bar from shrinking */
+                flex: 0 0 auto; /* Don't grow or shrink, use fixed width */
             }
             
             #progress-bar-fill {

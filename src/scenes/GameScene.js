@@ -25,6 +25,9 @@ export class GameScene extends Phaser.Scene {
         // This allows proper centering when image is smaller than viewport
         // camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
 
+        // Set container width to match image width
+        this.updateContainerWidth();
+
         // Recalculate layout now that we know world dimensions
         // This ensures bottom bar adjusts to show full image height
         this.setupLayout();
@@ -440,6 +443,9 @@ export class GameScene extends Phaser.Scene {
         //     camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
         // }
         
+        // Update container width to match image
+        this.updateContainerWidth();
+        
         // Update DOM container heights
         this.updateContainerHeights();
         
@@ -453,6 +459,38 @@ export class GameScene extends Phaser.Scene {
         // Recalculate zoom if world already exists
         if (this.worldWidth && this.worldHeight) {
             this.updateZoom();
+        }
+    }
+
+    updateContainerWidth() {
+        // Set the game container width to match the image width
+        const gameContainer = document.getElementById('game-container');
+        const bottomBarContainer = document.getElementById('bottom-bar-container');
+        
+        if (gameContainer && this.worldWidth) {
+            // Get the viewport width to ensure we don't exceed it
+            const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+            const maxWidth = viewportWidth * 0.90; // 90% of viewport
+            
+            // Use the smaller of image width or max width
+            const containerWidth = Math.min(this.worldWidth, maxWidth);
+            
+            gameContainer.style.width = `${containerWidth}px`;
+            gameContainer.style.maxWidth = `${containerWidth}px`;
+            
+            // Make bottom bar match the game container width
+            if (bottomBarContainer) {
+                bottomBarContainer.style.width = `${containerWidth}px`;
+                bottomBarContainer.style.maxWidth = `${containerWidth}px`;
+            }
+            
+            // Resize the Phaser game to match (only if dimensions changed)
+            const currentWidth = this.scale.width;
+            if (Math.abs(currentWidth - containerWidth) > 1) {
+                this.scale.resize(containerWidth, this.scale.height);
+            }
+            
+            console.log('Container width set to:', containerWidth, 'Image width:', this.worldWidth, 'Max width:', maxWidth);
         }
     }
 
@@ -500,6 +538,9 @@ export class GameScene extends Phaser.Scene {
         
         // Setup layout with the new dimensions
         // This ensures the viewport is calculated with the correct new size
+        // Update container width if needed (in case viewport changed)
+        this.updateContainerWidth();
+        
         this.setupLayout(newWidth, newHeight);
         
         // Recalculate zoom bounds
