@@ -5,6 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         <title>Search Quest</title>
         <style>
+            :root {
+                --safe-area-inset-top: env(safe-area-inset-top, 0px);
+                --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+            }
             /* Reset CSS: Please avoid making changes here unless you know what you're doing :) */
             *,
             *::before,
@@ -20,6 +24,7 @@
                 /* Use dynamic viewport height for mobile browsers */
                 height: 100dvh;
                 height: 100vh; /* Fallback for browsers that don't support dvh */
+                overflow: hidden;
             }
     
             body {
@@ -29,15 +34,17 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                justify-content: center;
-                padding: 8px;
-                gap: 8px;
+                justify-content: flex-start;
+                padding: 0;
+                padding-top: max(4px, var(--safe-area-inset-top));
+                padding-bottom: max(4px, var(--safe-area-inset-bottom));
+                gap: 6px;
                 overflow: hidden;
-                /* Use 92% of viewport to leave room for browser UI */
-                max-height: 92dvh;
-                max-height: 92vh; /* Fallback */
-                height: 92dvh;
-                height: 92vh; /* Fallback */
+                /* Use 88% of viewport to leave room for browser UI bars on mobile */
+                height: 88dvh;
+                height: 88vh; /* Fallback */
+                max-height: 88dvh;
+                max-height: 88vh; /* Fallback */
             }
     
             ol, ul {
@@ -70,19 +77,23 @@
                 width: 100%;
                 max-width: 100%;
                 min-height: 300px;
-                /* Use percentage of viewport to ensure it fits */
-                max-height: calc(92dvh - 116px); /* 92% viewport minus bottom bar (100px) + gap (8px) + padding (8px) */
-                max-height: calc(92vh - 116px); /* Fallback */
+                /* Constrain to fit within body minus bottom bar */
+                flex: 1 1 auto;
+                max-height: calc(88dvh - 106px); /* 88% viewport minus bottom bar (100px) + gap (6px) */
+                max-height: calc(88vh - 106px); /* Fallback */
+                overflow: hidden;
             }
 
             #bottom-bar-container {
                 min-height: 100px;
+                max-height: 100px;
                 height: 100px;
                 display: flex;
                 flex-direction: column;
                 padding: 12px;
                 position: relative;
                 border-top: 4px solid #e5e7eb; /* Progress bar background at top */
+                flex-shrink: 0; /* Prevent bottom bar from shrinking */
             }
             
             #progress-bar-fill {

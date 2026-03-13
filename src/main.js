@@ -16,11 +16,11 @@ const getContainerSize = () => {
         const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 100;
         
         // Calculate available height for game container
-        // Use 92% of viewport to leave room for browser UI bars
+        // Use 88% of viewport to leave room for browser UI bars
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        const usableHeight = viewportHeight * 0.92; // Use 92% of viewport
-        const bodyPadding = 16; // 8px top + 8px bottom
-        const gap = 8; // Gap between game container and bottom bar
+        const usableHeight = viewportHeight * 0.88; // Use 88% of viewport
+        const bodyPadding = 8; // 4px top + 4px bottom
+        const gap = 6; // Gap between game container and bottom bar
         const availableHeight = usableHeight - bodyPadding - gap - bottomBarHeight;
         
         return {
