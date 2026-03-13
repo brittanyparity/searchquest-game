@@ -453,14 +453,27 @@ export class GameScene extends Phaser.Scene {
     }
 
     updateContainerHeights() {
-        // Update the actual DOM container heights
+        // Update the actual DOM container dimensions
         const gameContainer = document.getElementById('game-container');
         const bottomBarContainer = document.getElementById('bottom-bar-container');
         
-        // Container size is now set by setContainerToImageSize()
-        // But we might still need to adjust for bottom bar layout
-        if (gameContainer && this.playAreaHeight > 0) {
-            // Container size is already set to image size
+        if (gameContainer) {
+            // Set width to match image width
+            if (this.worldWidth) {
+                gameContainer.style.width = `${this.worldWidth}px`;
+                gameContainer.style.maxWidth = `${this.worldWidth}px`;
+            }
+            
+            // Set height to match image height (when zoomed out)
+            if (this.playAreaHeight > 0) {
+                gameContainer.style.height = `${this.playAreaHeight}px`;
+                gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
+            }
+            
+            // Resize Phaser game to match container
+            if (this.worldWidth && this.playAreaHeight > 0) {
+                this.scale.resize(this.worldWidth, this.playAreaHeight);
+            }
         }
         
         if (bottomBarContainer) {
