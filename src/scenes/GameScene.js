@@ -21,7 +21,8 @@ export class GameScene extends Phaser.Scene {
         this.worldWidth = bg.displayWidth;
         this.worldHeight = bg.displayHeight;
 
-        camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
+        // Set camera bounds - use deadzone to allow centering when image is smaller than viewport
+        camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
 
         // Recalculate layout now that we know world dimensions
         // This ensures bottom bar adjusts to show full image height
@@ -33,12 +34,18 @@ export class GameScene extends Phaser.Scene {
         // Do this AFTER setupLayout so camera dimensions are correct
         camera.zoom = this.minZoom;
         
-        // Use a delay to ensure camera dimensions are fully set
+        // Center immediately and then again after delays to ensure it sticks
+        this.centerImageOnMinZoom();
+        
+        // Use delays to ensure camera dimensions are fully set
         // Call multiple times to ensure it centers properly after all setup
         this.time.delayedCall(50, () => {
             this.centerImageOnMinZoom();
         });
         this.time.delayedCall(200, () => {
+            this.centerImageOnMinZoom();
+        });
+        this.time.delayedCall(500, () => {
             this.centerImageOnMinZoom();
         });
 
@@ -574,8 +581,12 @@ export class GameScene extends Phaser.Scene {
         
         // Calculate scroll positions to center the image
         // When image is smaller than viewport, we need negative scroll values to center it
-        camera.scrollX = worldCenterX - visibleWidth / 2;
-        camera.scrollY = worldCenterY - visibleHeight / 2;
+        const targetScrollX = worldCenterX - visibleWidth / 2;
+        const targetScrollY = worldCenterY - visibleHeight / 2;
+        
+        // Set scroll positions directly
+        camera.scrollX = targetScrollX;
+        camera.scrollY = targetScrollY;
         
         // Clamp to bounds (allows negative values when image is smaller than viewport)
         this.clampCameraToBounds();
@@ -587,7 +598,8 @@ export class GameScene extends Phaser.Scene {
             zoom: camera.zoom,
             visibleSize: { width: visibleWidth, height: visibleHeight },
             scroll: { x: camera.scrollX, y: camera.scrollY },
-            worldCenter: { x: worldCenterX, y: worldCenterY }
+            worldCenter: { x: worldCenterX, y: worldCenterY },
+            targetScroll: { x: targetScrollX, y: targetScrollY }
         });
     }
 
