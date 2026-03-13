@@ -23,32 +23,32 @@ export class GameScene extends Phaser.Scene {
 
         camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
-        // Set container to match image dimensions
+        // Set container to match image dimensions first
         this.updateContainerSize();
-
-        // Recalculate layout now that we know world dimensions
-        // This ensures bottom bar adjusts to show full image height
-        this.setupLayout();
-        // setupLayout() already calls updateZoom(), so minZoom is set
         
-        // --- Camera config -----------------------------------------------------
-        // Set initial zoom to minimum (fully zoomed out) and center the image
-        // Do this AFTER setupLayout so camera dimensions are correct
-        camera.zoom = this.minZoom;
-        
-        // Center immediately and then again after delays to ensure it sticks
-        this.centerImageOnMinZoom();
-        
-        // Use delays to ensure camera dimensions are fully set
-        // Call multiple times to ensure it centers properly after all setup
-        this.time.delayedCall(50, () => {
+        // Wait a frame for the resize to take effect, then setup layout
+        this.time.delayedCall(10, () => {
+            // Recalculate layout now that we know world dimensions and container is resized
+            // This ensures bottom bar adjusts to show full image height
+            this.setupLayout();
+            // setupLayout() already calls updateZoom(), so minZoom is set
+            
+            // --- Camera config -----------------------------------------------------
+            // Set initial zoom to minimum (fully zoomed out) and center the image
+            // Do this AFTER setupLayout so camera dimensions are correct
+            camera.zoom = this.minZoom;
+            
+            // Center immediately and then again after delays to ensure it sticks
             this.centerImageOnMinZoom();
-        });
-        this.time.delayedCall(200, () => {
-            this.centerImageOnMinZoom();
-        });
-        this.time.delayedCall(500, () => {
-            this.centerImageOnMinZoom();
+            
+            // Use delays to ensure camera dimensions are fully set
+            // Call multiple times to ensure it centers properly after all setup
+            this.time.delayedCall(50, () => {
+                this.centerImageOnMinZoom();
+            });
+            this.time.delayedCall(200, () => {
+                this.centerImageOnMinZoom();
+            });
         });
 
         // Enable a couple of extra pointers so pinch works well on mobile
@@ -483,9 +483,14 @@ export class GameScene extends Phaser.Scene {
             gameContainer.style.maxHeight = `${containerHeight}px`;
             
             // Resize the Phaser game to match
+            // This will trigger a resize event which will update the camera
             this.scale.resize(containerWidth, containerHeight);
             
-            console.log('Container size set to:', { width: containerWidth, height: containerHeight }, 'Image size:', { width: this.worldWidth, height: this.worldHeight });
+            // Force camera to update its viewport immediately
+            const camera = this.cameras.main;
+            camera.setViewport(0, 0, containerWidth, containerHeight);
+            
+            console.log('Container size set to:', { width: containerWidth, height: containerHeight }, 'Image size:', { width: this.worldWidth, height: this.worldHeight }, 'Scale:', scale);
         }
     }
 
