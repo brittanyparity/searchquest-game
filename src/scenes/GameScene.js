@@ -23,6 +23,9 @@ export class GameScene extends Phaser.Scene {
 
         camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
+        // Set container to match image dimensions
+        this.updateContainerSize();
+
         // Recalculate layout now that we know world dimensions
         // This ensures bottom bar adjusts to show full image height
         this.setupLayout();
@@ -436,6 +439,9 @@ export class GameScene extends Phaser.Scene {
             camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
         }
         
+        // Update container size to match image
+        this.updateContainerSize();
+        
         // Update DOM container heights
         this.updateContainerHeights();
         
@@ -452,16 +458,47 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    updateContainerSize() {
+        // Set the game container to match the image dimensions exactly
+        const gameContainer = document.getElementById('game-container');
+        
+        if (gameContainer && this.worldWidth && this.worldHeight) {
+            // Get viewport dimensions to ensure we don't exceed them
+            const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+            const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            const maxWidth = viewportWidth * 0.90; // 90% of viewport
+            const maxHeight = viewportHeight * 0.85; // 85% of viewport
+            
+            // Calculate scale to fit within viewport if needed
+            const scaleX = maxWidth / this.worldWidth;
+            const scaleY = maxHeight / this.worldHeight;
+            const scale = Math.min(1, scaleX, scaleY); // Don't scale up, only down if needed
+            
+            const containerWidth = this.worldWidth * scale;
+            const containerHeight = this.worldHeight * scale;
+            
+            gameContainer.style.width = `${containerWidth}px`;
+            gameContainer.style.height = `${containerHeight}px`;
+            gameContainer.style.maxWidth = `${containerWidth}px`;
+            gameContainer.style.maxHeight = `${containerHeight}px`;
+            
+            // Resize the Phaser game to match
+            this.scale.resize(containerWidth, containerHeight);
+            
+            console.log('Container size set to:', { width: containerWidth, height: containerHeight }, 'Image size:', { width: this.worldWidth, height: this.worldHeight });
+        }
+    }
+
     updateContainerHeights() {
-        // Update the actual DOM container heights
+        // Update the actual DOM container heights (for bottom bar)
         const gameContainer = document.getElementById('game-container');
         const bottomBarContainer = document.getElementById('bottom-bar-container');
         
-        // Set game container max-height to match image height when zoomed out
+        // Game container size is now set by updateContainerSize()
+        // But we might still need to adjust for bottom bar layout
         if (gameContainer && this.playAreaHeight > 0) {
-            gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
-            // Also set height to ensure it works, but max-height will constrain it
-            gameContainer.style.height = `${this.playAreaHeight}px`;
+            // If we're using bottom bar layout, adjust accordingly
+            // For now, container size is set by updateContainerSize()
         }
         
         if (bottomBarContainer) {
@@ -496,6 +533,9 @@ export class GameScene extends Phaser.Scene {
         
         // Setup layout with the new dimensions
         // This ensures the viewport is calculated with the correct new size
+        // Update container size if needed
+        this.updateContainerSize();
+        
         this.setupLayout(newWidth, newHeight);
         
         // Recalculate zoom bounds
