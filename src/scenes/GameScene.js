@@ -28,6 +28,17 @@ export class GameScene extends Phaser.Scene {
         this.setupLayout();
         // setupLayout() already calls updateZoom(), so minZoom is set
         
+        // After layout is set, resize Phaser game to match container dimensions
+        // Do this after a small delay to avoid infinite loop
+        this.time.delayedCall(50, () => {
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer && this.worldWidth && this.playAreaHeight > 0) {
+                const containerWidth = gameContainer.clientWidth || this.worldWidth;
+                const containerHeight = gameContainer.clientHeight || this.playAreaHeight;
+                this.scale.resize(containerWidth, containerHeight);
+            }
+        });
+        
         // --- Camera config -----------------------------------------------------
         // Set initial zoom to minimum (fully zoomed out) and center the image
         // Do this AFTER setupLayout so camera dimensions are correct
@@ -470,10 +481,9 @@ export class GameScene extends Phaser.Scene {
                 gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
             }
             
-            // Resize Phaser game to match container
-            if (this.worldWidth && this.playAreaHeight > 0) {
-                this.scale.resize(this.worldWidth, this.playAreaHeight);
-            }
+            // Don't call this.scale.resize() here - it causes infinite loop
+            // The Phaser game will resize automatically via the resize handler in main.js
+            // or we'll handle it separately after layout is set up
         }
         
         if (bottomBarContainer) {
