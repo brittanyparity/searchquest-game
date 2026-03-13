@@ -40,11 +40,13 @@
                 padding-bottom: max(4px, var(--safe-area-inset-bottom));
                 gap: 6px;
                 overflow: hidden;
-                /* Use 88% of viewport to leave room for browser UI bars on mobile */
-                height: 88dvh;
-                height: 88vh; /* Fallback */
-                max-height: 88dvh;
-                max-height: 88vh; /* Fallback */
+                /* Use 85% of viewport height and 90% of viewport width */
+                height: 85dvh;
+                height: 85vh; /* Fallback */
+                max-height: 85dvh;
+                max-height: 85vh; /* Fallback */
+                width: 90vw;
+                max-width: 90vw;
             }
     
             ol, ul {
@@ -79,8 +81,8 @@
                 min-height: 300px;
                 /* Constrain to fit within body minus bottom bar */
                 flex: 1 1 auto;
-                max-height: calc(88dvh - 106px); /* 88% viewport minus bottom bar (100px) + gap (6px) */
-                max-height: calc(88vh - 106px); /* Fallback */
+                max-height: calc(85dvh - 106px); /* 85% viewport minus bottom bar (100px) + gap (6px) */
+                max-height: calc(85vh - 106px); /* Fallback */
                 overflow: hidden;
             }
 

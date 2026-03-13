@@ -9,22 +9,26 @@ const getContainerSize = () => {
     const bottomBar = document.getElementById('bottom-bar-container');
     
     if (gameContainer) {
-        // Use max-width for the container (will be set by CSS)
-        const containerWidth = gameContainer.clientWidth || window.innerWidth - 32; // Account for body padding
-        
         // Get actual bottom bar height from DOM (set dynamically)
         const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 100;
         
         // Calculate available height for game container
-        // Use 88% of viewport to leave room for browser UI bars
+        // Use 85% of viewport to leave room for browser UI bars
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        const usableHeight = viewportHeight * 0.88; // Use 88% of viewport
+        const usableHeight = viewportHeight * 0.85; // Use 85% of viewport
         const bodyPadding = 8; // 4px top + 4px bottom
         const gap = 6; // Gap between game container and bottom bar
         const availableHeight = usableHeight - bodyPadding - gap - bottomBarHeight;
         
+        // Use 90% of viewport width
+        const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        const usableWidth = viewportWidth * 0.90; // Use 90% of viewport
+        
+        // Use the calculated width or the container's actual width (whichever is smaller)
+        const containerWidth = gameContainer.clientWidth || usableWidth;
+        
         return {
-            width: containerWidth,
+            width: Math.min(containerWidth, usableWidth),
             height: Math.max(300, availableHeight),
             bottomBarHeight: bottomBarHeight,
             spacing: gap
