@@ -28,17 +28,6 @@ export class GameScene extends Phaser.Scene {
         this.setupLayout();
         // setupLayout() already calls updateZoom(), so minZoom is set
         
-        // After layout is set, resize Phaser game to match container dimensions
-        // Do this after a small delay to avoid infinite loop
-        this.time.delayedCall(50, () => {
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer && this.worldWidth && this.playAreaHeight > 0) {
-                const containerWidth = gameContainer.clientWidth || this.worldWidth;
-                const containerHeight = gameContainer.clientHeight || this.playAreaHeight;
-                this.scale.resize(containerWidth, containerHeight);
-            }
-        });
-        
         // --- Camera config -----------------------------------------------------
         // Set initial zoom to minimum (fully zoomed out) and center the image
         // Do this AFTER setupLayout so camera dimensions are correct
@@ -464,26 +453,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     updateContainerHeights() {
-        // Update the actual DOM container dimensions
+        // Update the actual DOM container heights
         const gameContainer = document.getElementById('game-container');
         const bottomBarContainer = document.getElementById('bottom-bar-container');
         
-        if (gameContainer) {
-            // Set width to match image width
-            if (this.worldWidth) {
-                gameContainer.style.width = `${this.worldWidth}px`;
-                gameContainer.style.maxWidth = `${this.worldWidth}px`;
-            }
-            
-            // Set height to match image height (when zoomed out)
-            if (this.playAreaHeight > 0) {
-                gameContainer.style.height = `${this.playAreaHeight}px`;
-                gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
-            }
-            
-            // Don't call this.scale.resize() here - it causes infinite loop
-            // The Phaser game will resize automatically via the resize handler in main.js
-            // or we'll handle it separately after layout is set up
+        // Set game container max-height to match image height when zoomed out
+        if (gameContainer && this.playAreaHeight > 0) {
+            gameContainer.style.maxHeight = `${this.playAreaHeight}px`;
+            // Also set height to ensure it works, but max-height will constrain it
+            gameContainer.style.height = `${this.playAreaHeight}px`;
         }
         
         if (bottomBarContainer) {
