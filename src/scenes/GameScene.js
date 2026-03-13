@@ -33,8 +33,12 @@ export class GameScene extends Phaser.Scene {
         // Do this AFTER setupLayout so camera dimensions are correct
         camera.zoom = this.minZoom;
         
-        // Use a small delay to ensure camera dimensions are fully set
-        this.time.delayedCall(10, () => {
+        // Use a delay to ensure camera dimensions are fully set
+        // Call multiple times to ensure it centers properly after all setup
+        this.time.delayedCall(50, () => {
+            this.centerImageOnMinZoom();
+        });
+        this.time.delayedCall(200, () => {
             this.centerImageOnMinZoom();
         });
 
@@ -554,35 +558,27 @@ export class GameScene extends Phaser.Scene {
         camera.zoom = this.minZoom;
         
         // Verify camera dimensions are valid
-        if (camera.width === 0 || camera.height === 0) {
-            console.warn('Camera dimensions not set, retrying centering...');
+        if (camera.width === 0 || camera.height === 0 || !this.worldWidth || !this.worldHeight) {
+            console.warn('Camera or world dimensions not set, retrying centering...');
             this.time.delayedCall(50, () => this.centerImageOnMinZoom());
             return;
         }
         
-        // Center the camera on the world center (image center) when at minZoom
-        const worldCenterX = this.worldWidth / 2;
-        const worldCenterY = this.worldHeight / 2;
-        
-        // Use Phaser's centerOn method which handles the calculation
-        camera.centerOn(worldCenterX, worldCenterY);
-        
-        // Then adjust if needed to ensure we don't show areas outside bounds
         // Calculate the visible world size at current zoom
         const visibleWidth = camera.width / camera.zoom;
         const visibleHeight = camera.height / camera.zoom;
         
-        // Check if we need to clamp
-        const maxScrollX = this.worldWidth - visibleWidth;
-        const maxScrollY = this.worldHeight - visibleHeight;
+        // Calculate the world center (image center)
+        const worldCenterX = this.worldWidth / 2;
+        const worldCenterY = this.worldHeight / 2;
         
-        // Only clamp if image is larger than viewport
-        if (maxScrollX >= 0) {
-            camera.scrollX = Phaser.Math.Clamp(camera.scrollX, 0, maxScrollX);
-        }
-        if (maxScrollY >= 0) {
-            camera.scrollY = Phaser.Math.Clamp(camera.scrollY, 0, maxScrollY);
-        }
+        // Calculate scroll positions to center the image
+        // When image is smaller than viewport, we need negative scroll values to center it
+        camera.scrollX = worldCenterX - visibleWidth / 2;
+        camera.scrollY = worldCenterY - visibleHeight / 2;
+        
+        // Clamp to bounds (allows negative values when image is smaller than viewport)
+        this.clampCameraToBounds();
         
         // Log for debugging
         console.log('Centering image:', {
