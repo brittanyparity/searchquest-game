@@ -16,10 +16,10 @@ const getContainerSize = () => {
         const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 100;
         
         // Calculate available height for game container
-        // Account for: viewport height - body padding (32px) - gap (12px) - bottom bar height
-        const viewportHeight = window.innerHeight;
-        const bodyPadding = 32; // 16px top + 16px bottom
-        const gap = 12; // Gap between game container and bottom bar
+        // Use visualViewport if available (more accurate on mobile), otherwise innerHeight
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const bodyPadding = 16; // 8px top + 8px bottom (reduced for mobile)
+        const gap = 8; // Gap between game container and bottom bar (reduced for mobile)
         const availableHeight = viewportHeight - bodyPadding - gap - bottomBarHeight;
         
         return {
@@ -60,8 +60,19 @@ const config = {
 const game = new Phaser.Game(config);
 
 // Handle window resize
-window.addEventListener('resize', () => {
+const handleResize = () => {
     const newSize = getContainerSize();
     game.scale.resize(newSize.width, newSize.height);
-});
+};
+
+window.addEventListener('resize', handleResize);
+
+// Handle visualViewport changes (important for mobile Safari)
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', () => {
+        // Prevent scrolling when viewport changes
+        window.scrollTo(0, 0);
+    });
+}
             
