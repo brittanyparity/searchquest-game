@@ -255,13 +255,13 @@ export class UIScene extends Phaser.Scene {
         hintButton.id = 'hint-button-sidebar';
         hintButton.innerHTML = '💡'; // Light bulb emoji (you can replace with an icon later)
         hintButton.style.cssText = `
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             background-color: #10b981;
             color: #ffffff;
             border: none;
             border-radius: 50%;
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
             transition: transform 0.1s ease, box-shadow 0.1s ease;
