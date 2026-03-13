@@ -394,11 +394,12 @@ export class GameScene extends Phaser.Scene {
             this.playAreaHeight = imageHeightAtMinZoom;
             
             // Calculate available space for bottom bar
-            // Use visualViewport if available (more accurate on mobile), otherwise innerHeight
+            // Use 92% of viewport to leave room for browser UI bars
             const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-            const bodyPadding = 16; // 8px top + 8px bottom (reduced for mobile)
-            const gap = 8; // Gap between containers (reduced for mobile)
-            const availableForBottomBar = viewportHeight - bodyPadding - gap - this.playAreaHeight;
+            const usableHeight = viewportHeight * 0.92; // Use 92% of viewport
+            const bodyPadding = 16; // 8px top + 8px bottom
+            const gap = 8; // Gap between containers
+            const availableForBottomBar = usableHeight - bodyPadding - gap - this.playAreaHeight;
             
             // Bottom bar minimum height
             const minBottomBarHeight = Math.max(80, viewportHeight * 0.08);

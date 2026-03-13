@@ -33,9 +33,11 @@
                 padding: 8px;
                 gap: 8px;
                 overflow: hidden;
-                /* Ensure body doesn't exceed viewport */
-                max-height: 100dvh;
-                max-height: 100vh; /* Fallback */
+                /* Use 92% of viewport to leave room for browser UI */
+                max-height: 92dvh;
+                max-height: 92vh; /* Fallback */
+                height: 92dvh;
+                height: 92vh; /* Fallback */
             }
     
             ol, ul {
@@ -68,9 +70,9 @@
                 width: 100%;
                 max-width: 100%;
                 min-height: 300px;
-                /* Use dynamic viewport height and account for bottom bar + padding + gap */
-                max-height: calc(100dvh - 124px); /* Account for body padding (16px) + gap (8px) + bottom bar (100px) */
-                max-height: calc(100vh - 124px); /* Fallback */
+                /* Use percentage of viewport to ensure it fits */
+                max-height: calc(92dvh - 116px); /* 92% viewport minus bottom bar (100px) + gap (8px) + padding (8px) */
+                max-height: calc(92vh - 116px); /* Fallback */
             }
 
             #bottom-bar-container {
