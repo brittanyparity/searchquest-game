@@ -241,23 +241,20 @@ export class UIScene extends Phaser.Scene {
     }
     
     buildHintButton() {
-        // Create hint button in the game container (bottom right)
-        const gameContainer = document.getElementById('game-container');
-        if (!gameContainer) return;
+        // Create hint button in the sidebar container (at the top)
+        const sidebarContent = document.getElementById('sidebar-content');
+        if (!sidebarContent) return;
         
         // Remove existing hint button if it exists
-        const existingButton = document.getElementById('hint-button-game');
+        const existingButton = document.getElementById('hint-button-sidebar');
         if (existingButton) {
             existingButton.remove();
         }
         
         const hintButton = document.createElement('button');
-        hintButton.id = 'hint-button-game';
+        hintButton.id = 'hint-button-sidebar';
         hintButton.innerHTML = '💡'; // Light bulb emoji (you can replace with an icon later)
         hintButton.style.cssText = `
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
             width: 48px;
             height: 48px;
             background-color: #10b981;
@@ -268,10 +265,10 @@ export class UIScene extends Phaser.Scene {
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
+            align-self: flex-start;
         `;
 
         hintButton.addEventListener('mousedown', () => {
@@ -284,7 +281,7 @@ export class UIScene extends Phaser.Scene {
             this.game.events.emit('hintRequested');
         });
 
-        gameContainer.appendChild(hintButton);
+        sidebarContent.appendChild(hintButton);
     }
 
     handleResize(gameSize) {
