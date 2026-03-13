@@ -23,32 +23,32 @@ export class GameScene extends Phaser.Scene {
 
         camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
-        // Set container to match image dimensions first
-        this.updateContainerSize();
+        // Set container to match image dimensions
+        this.setContainerToImageSize();
+
+        // Recalculate layout now that we know world dimensions
+        // This ensures bottom bar adjusts to show full image height
+        this.setupLayout();
+        // setupLayout() already calls updateZoom(), so minZoom is set
         
-        // Wait a frame for the resize to take effect, then setup layout
-        this.time.delayedCall(10, () => {
-            // Recalculate layout now that we know world dimensions and container is resized
-            // This ensures bottom bar adjusts to show full image height
-            this.setupLayout();
-            // setupLayout() already calls updateZoom(), so minZoom is set
-            
-            // --- Camera config -----------------------------------------------------
-            // Set initial zoom to minimum (fully zoomed out) and center the image
-            // Do this AFTER setupLayout so camera dimensions are correct
-            camera.zoom = this.minZoom;
-            
-            // Center immediately and then again after delays to ensure it sticks
+        // --- Camera config -----------------------------------------------------
+        // Set initial zoom to minimum (fully zoomed out) and center the image
+        // Do this AFTER setupLayout so camera dimensions are correct
+        camera.zoom = this.minZoom;
+        
+        // Center immediately and then again after delays to ensure it sticks
+        this.centerImageOnMinZoom();
+        
+        // Use delays to ensure camera dimensions are fully set
+        // Call multiple times to ensure it centers properly after all setup
+        this.time.delayedCall(50, () => {
             this.centerImageOnMinZoom();
-            
-            // Use delays to ensure camera dimensions are fully set
-            // Call multiple times to ensure it centers properly after all setup
-            this.time.delayedCall(50, () => {
-                this.centerImageOnMinZoom();
-            });
-            this.time.delayedCall(200, () => {
-                this.centerImageOnMinZoom();
-            });
+        });
+        this.time.delayedCall(200, () => {
+            this.centerImageOnMinZoom();
+        });
+        this.time.delayedCall(500, () => {
+            this.centerImageOnMinZoom();
         });
 
         // Enable a couple of extra pointers so pinch works well on mobile
@@ -439,9 +439,6 @@ export class GameScene extends Phaser.Scene {
             camera.setBounds(0, 0, this.worldWidth, this.worldHeight);
         }
         
-        // Update container size to match image
-        this.updateContainerSize();
-        
         // Update DOM container heights
         this.updateContainerHeights();
         
@@ -458,52 +455,33 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    updateContainerSize() {
+    setContainerToImageSize() {
         // Set the game container to match the image dimensions exactly
         const gameContainer = document.getElementById('game-container');
         
         if (gameContainer && this.worldWidth && this.worldHeight) {
-            // Get viewport dimensions to ensure we don't exceed them
-            const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-            const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-            const maxWidth = viewportWidth * 0.90; // 90% of viewport
-            const maxHeight = viewportHeight * 0.85; // 85% of viewport
-            
-            // Calculate scale to fit within viewport if needed
-            const scaleX = maxWidth / this.worldWidth;
-            const scaleY = maxHeight / this.worldHeight;
-            const scale = Math.min(1, scaleX, scaleY); // Don't scale up, only down if needed
-            
-            const containerWidth = this.worldWidth * scale;
-            const containerHeight = this.worldHeight * scale;
-            
-            gameContainer.style.width = `${containerWidth}px`;
-            gameContainer.style.height = `${containerHeight}px`;
-            gameContainer.style.maxWidth = `${containerWidth}px`;
-            gameContainer.style.maxHeight = `${containerHeight}px`;
+            // Set container to match image size
+            gameContainer.style.width = `${this.worldWidth}px`;
+            gameContainer.style.height = `${this.worldHeight}px`;
+            gameContainer.style.maxWidth = `${this.worldWidth}px`;
+            gameContainer.style.maxHeight = `${this.worldHeight}px`;
             
             // Resize the Phaser game to match
-            // This will trigger a resize event which will update the camera
-            this.scale.resize(containerWidth, containerHeight);
+            this.scale.resize(this.worldWidth, this.worldHeight);
             
-            // Force camera to update its viewport immediately
-            const camera = this.cameras.main;
-            camera.setViewport(0, 0, containerWidth, containerHeight);
-            
-            console.log('Container size set to:', { width: containerWidth, height: containerHeight }, 'Image size:', { width: this.worldWidth, height: this.worldHeight }, 'Scale:', scale);
+            console.log('Container set to image size:', { width: this.worldWidth, height: this.worldHeight });
         }
     }
 
     updateContainerHeights() {
-        // Update the actual DOM container heights (for bottom bar)
+        // Update the actual DOM container heights
         const gameContainer = document.getElementById('game-container');
         const bottomBarContainer = document.getElementById('bottom-bar-container');
         
-        // Game container size is now set by updateContainerSize()
+        // Container size is now set by setContainerToImageSize()
         // But we might still need to adjust for bottom bar layout
         if (gameContainer && this.playAreaHeight > 0) {
-            // If we're using bottom bar layout, adjust accordingly
-            // For now, container size is set by updateContainerSize()
+            // Container size is already set to image size
         }
         
         if (bottomBarContainer) {
@@ -538,9 +516,6 @@ export class GameScene extends Phaser.Scene {
         
         // Setup layout with the new dimensions
         // This ensures the viewport is calculated with the correct new size
-        // Update container size if needed
-        this.updateContainerSize();
-        
         this.setupLayout(newWidth, newHeight);
         
         // Recalculate zoom bounds
