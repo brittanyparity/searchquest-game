@@ -21,8 +21,9 @@ export class GameScene extends Phaser.Scene {
         this.worldWidth = bg.displayWidth;
         this.worldHeight = bg.displayHeight;
 
-        // Set camera bounds - use deadzone to allow centering when image is smaller than viewport
-        camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
+        // Don't set strict camera bounds - we'll handle bounds in clampCameraToBounds
+        // This allows proper centering when image is smaller than viewport
+        // camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
 
         // Recalculate layout now that we know world dimensions
         // This ensures bottom bar adjusts to show full image height
@@ -433,12 +434,11 @@ export class GameScene extends Phaser.Scene {
         camera.setViewport(0, 0, fullWidth, fullHeight);
         
         // Update camera bounds if world exists
-        // Note: setBounds might interfere with centering, so we'll handle bounds in clampCameraToBounds
-        // Don't set strict bounds here - let clampCameraToBounds handle it
-        if (this.worldWidth && this.worldHeight) {
-            // Set bounds but don't enforce them strictly (deadzone allows centering)
-            camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
-        }
+        // Note: Don't set bounds here - we handle bounds in clampCameraToBounds
+        // This allows proper centering when image is smaller than viewport
+        // if (this.worldWidth && this.worldHeight) {
+        //     camera.setBounds(0, 0, this.worldWidth, this.worldHeight, true);
+        // }
         
         // Update DOM container heights
         this.updateContainerHeights();
@@ -571,25 +571,30 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         
-        // Calculate the visible world size at current zoom
-        const visibleWidth = camera.width / camera.zoom;
-        const visibleHeight = camera.height / camera.zoom;
-        
         // Calculate the world center (image center)
         const worldCenterX = this.worldWidth / 2;
         const worldCenterY = this.worldHeight / 2;
         
-        // Calculate scroll positions to center the image
-        // When image is smaller than viewport, we need negative scroll values to center it
-        const targetScrollX = worldCenterX - visibleWidth / 2;
-        const targetScrollY = worldCenterY - visibleHeight / 2;
+        // Use Phaser's centerOn method - this should handle the centering properly
+        camera.centerOn(worldCenterX, worldCenterY);
         
-        // Set scroll positions directly
-        camera.scrollX = targetScrollX;
-        camera.scrollY = targetScrollY;
+        // Calculate the visible world size at current zoom
+        const visibleWidth = camera.width / camera.zoom;
+        const visibleHeight = camera.height / camera.zoom;
         
-        // Clamp to bounds (allows negative values when image is smaller than viewport)
-        this.clampCameraToBounds();
+        // Check if image is smaller than viewport - if so, we need to allow negative scroll
+        const maxScrollX = this.worldWidth - visibleWidth;
+        const maxScrollY = this.worldHeight - visibleHeight;
+        
+        // If image is smaller than viewport, ensure we can scroll to negative values to center
+        // Don't clamp if we're trying to center and image is smaller
+        if (maxScrollX < 0 || maxScrollY < 0) {
+            // Image is smaller than viewport - allow negative scroll to center
+            // Don't clamp in this case
+        } else {
+            // Image is larger - clamp to bounds
+            this.clampCameraToBounds();
+        }
         
         // Log for debugging
         console.log('Centering image:', {
@@ -599,7 +604,7 @@ export class GameScene extends Phaser.Scene {
             visibleSize: { width: visibleWidth, height: visibleHeight },
             scroll: { x: camera.scrollX, y: camera.scrollY },
             worldCenter: { x: worldCenterX, y: worldCenterY },
-            targetScroll: { x: targetScrollX, y: targetScrollY }
+            maxScroll: { x: maxScrollX, y: maxScrollY }
         });
     }
 
