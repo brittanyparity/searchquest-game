@@ -26,29 +26,30 @@ export class GameScene extends Phaser.Scene {
         // Set container to match image dimensions
         this.setContainerToImageSize();
 
-        // Recalculate layout now that we know world dimensions
-        // This ensures bottom bar adjusts to show full image height
-        this.setupLayout();
-        // setupLayout() already calls updateZoom(), so minZoom is set
-        
-        // --- Camera config -----------------------------------------------------
-        // Set initial zoom to minimum (fully zoomed out) and center the image
-        // Do this AFTER setupLayout so camera dimensions are correct
-        camera.zoom = this.minZoom;
-        
-        // Center immediately and then again after delays to ensure it sticks
-        this.centerImageOnMinZoom();
-        
-        // Use delays to ensure camera dimensions are fully set
-        // Call multiple times to ensure it centers properly after all setup
-        this.time.delayedCall(50, () => {
-            this.centerImageOnMinZoom();
-        });
-        this.time.delayedCall(200, () => {
-            this.centerImageOnMinZoom();
-        });
-        this.time.delayedCall(500, () => {
-            this.centerImageOnMinZoom();
+        // Wait a frame for resize to take effect
+        this.time.delayedCall(10, () => {
+            // Recalculate layout now that we know world dimensions
+            // This ensures bottom bar adjusts to show full image height
+            this.setupLayout();
+            // setupLayout() already calls updateZoom(), so minZoom is set
+            
+            // --- Camera config -----------------------------------------------------
+            // When container = image size, zoom should be 1.0 and camera at (0,0)
+            const camera = this.cameras.main;
+            camera.zoom = 1.0; // Since container matches image, use 1:1 zoom
+            camera.scrollX = 0; // Start at top-left of image
+            camera.scrollY = 0;
+            
+            // Update minZoom to 1.0 since container matches image
+            this.minZoom = 1.0;
+            this.maxZoom = this.minZoom * 8;
+            
+            console.log('Camera configured:', { 
+                zoom: camera.zoom, 
+                scroll: { x: camera.scrollX, y: camera.scrollY },
+                cameraSize: { width: camera.width, height: camera.height },
+                worldSize: { width: this.worldWidth, height: this.worldHeight }
+            });
         });
 
         // Enable a couple of extra pointers so pinch works well on mobile
@@ -468,6 +469,10 @@ export class GameScene extends Phaser.Scene {
             
             // Resize the Phaser game to match
             this.scale.resize(this.worldWidth, this.worldHeight);
+            
+            // Ensure camera viewport matches the new size
+            const camera = this.cameras.main;
+            camera.setViewport(0, 0, this.worldWidth, this.worldHeight);
             
             console.log('Container set to image size:', { width: this.worldWidth, height: this.worldHeight });
         }
