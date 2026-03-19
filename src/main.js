@@ -11,7 +11,7 @@ const getContainerSize = () => {
     
     if (gameContainer) {
         // Get actual container heights from DOM
-        const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 80;
+        const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 100;
         const adHeight = adContainer ? adContainer.offsetHeight : 50;
         
         // Calculate available height for game container
@@ -38,7 +38,7 @@ const getContainerSize = () => {
         };
     }
     // Fallback
-    return { width: 393, height: 600, galleryHeight: 80, adHeight: 50, spacing: 12 };
+    return { width: 393, height: 600, galleryHeight: 100, adHeight: 50, spacing: 12 };
 };
 
 const initialSize = getContainerSize();

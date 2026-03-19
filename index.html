@@ -41,7 +41,7 @@
                 justify-content: flex-start;
                 padding: 0;
                 padding-top: max(8px, var(--safe-area-inset-top));
-                padding-bottom: max(8px, var(--safe-area-inset-bottom));
+                padding-bottom: max(58px, calc(50px + 8px + var(--safe-area-inset-bottom)));
                 gap: 6px;
                 overflow: hidden;
                 /* Use 85% of viewport height and 90% of viewport width */
@@ -88,9 +88,9 @@
             }
             
             #gallery-container {
-                min-height: 80px;
-                height: 80px;
-                max-height: 80px;
+                min-height: 100px;
+                height: 100px;
+                max-height: 100px;
                 display: flex;
                 flex-direction: column;
                 padding: 12px;
@@ -99,6 +99,10 @@
             }
             
             #ad-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100vw;
                 min-height: 50px;
                 height: 50px;
                 max-height: 50px;
@@ -107,8 +111,8 @@
                 justify-content: center;
                 padding: 8px;
                 background-color: #f3f4f6;
-                border-radius: 8px;
                 flex-shrink: 0;
+                z-index: 100;
             }
             
             #ad-placeholder {
@@ -139,11 +143,22 @@
                 width: 100%;
                 height: 100%;
             }
+            
+            #gallery-title {
+                font-family: Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                color: #1f2937;
+                text-align: center;
+                margin-bottom: 8px;
+                padding: 0 12px;
+            }
         </style>
     </head>
     <body>
         <div id="game-container" class="game-container"></div>
         <div id="gallery-container" class="game-container">
+            <div id="gallery-title">FIND THE OBJECTS · 0/5</div>
             <div id="gallery-content"></div>
         </div>
         <div id="ad-container">

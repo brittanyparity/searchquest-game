@@ -332,7 +332,7 @@ export class UIScene extends Phaser.Scene {
     onObjectsCreated(payload) {
         console.log('=== onObjectsCreated EVENT RECEIVED ===');
         console.log('Full payload:', JSON.stringify(payload, null, 2));
-        const { objects } = payload;
+        const { objects, total } = payload;
         
         if (!objects || objects.length === 0) {
             console.error('❌ onObjectsCreated called with no objects!', payload);
@@ -343,6 +343,12 @@ export class UIScene extends Phaser.Scene {
         
         // Store objects
         this.pendingObjects = objects;
+        
+        // Initialize gallery title with total count
+        const galleryTitle = document.getElementById('gallery-title');
+        if (galleryTitle) {
+            galleryTitle.textContent = `FIND THE OBJECTS · 0/${total || objects.length}`;
+        }
         
         // Try to populate immediately
         const gallery = document.getElementById('object-gallery');
@@ -370,9 +376,10 @@ export class UIScene extends Phaser.Scene {
             galleryItem.style.opacity = '0.3';
         }
 
-        const instructionsText = document.getElementById('instructions-text');
-        if (instructionsText) {
-            instructionsText.textContent = `FIND THE OBJECTS · SCORE: ${score}`;
+        // Update gallery title with score and found count
+        const galleryTitle = document.getElementById('gallery-title');
+        if (galleryTitle) {
+            galleryTitle.textContent = `FIND THE OBJECTS · ${found}/${total}`;
         }
     }
 
@@ -396,16 +403,16 @@ export class UIScene extends Phaser.Scene {
     }
 
     onTimeUp({ score, found, total }) {
-        const instructionsText = document.getElementById('instructions-text');
-        if (instructionsText) {
-            instructionsText.textContent = `TIME UP · SCORE: ${score} · FOUND ${found}/${total}`;
+        const galleryTitle = document.getElementById('gallery-title');
+        if (galleryTitle) {
+            galleryTitle.textContent = `TIME UP · FOUND ${found}/${total}`;
         }
     }
 
     onAllObjectsFound({ score, timeRemaining }) {
-        const instructionsText = document.getElementById('instructions-text');
-        if (instructionsText) {
-            instructionsText.textContent = `ALL OBJECTS FOUND! SCORE: ${score} · ${timeRemaining.toFixed(1)}s LEFT`;
+        const galleryTitle = document.getElementById('gallery-title');
+        if (galleryTitle) {
+            galleryTitle.textContent = `ALL OBJECTS FOUND! ${timeRemaining.toFixed(1)}s LEFT`;
         }
     }
 
