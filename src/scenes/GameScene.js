@@ -29,9 +29,9 @@ export class GameScene extends Phaser.Scene {
         // setupLayout() already calls updateZoom(), so minZoom is set
         
         // --- Camera config -----------------------------------------------------
-        // Set initial zoom to 25% more than minZoom (zoomed in by 25%)
+        // Set initial zoom to 50% more than minZoom (zoomed in by 50%)
         // Do this AFTER setupLayout so camera dimensions are correct
-        const initialZoom = this.minZoom * 1.25;
+        const initialZoom = this.minZoom * 1.5;
         camera.zoom = Phaser.Math.Clamp(initialZoom, this.minZoom, this.maxZoom);
         
         // Center the image immediately and then again after delays to ensure it sticks
@@ -544,24 +544,14 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         
-        // Calculate the visible world size at current zoom
-        const visibleWidth = camera.width / camera.zoom;
-        const visibleHeight = camera.height / camera.zoom;
-        
         // Calculate the world center (image center)
         const worldCenterX = this.worldWidth / 2;
         const worldCenterY = this.worldHeight / 2;
         
-        // Calculate scroll positions to center the image
-        // When image is smaller than viewport, we need negative scroll values to center it
-        const targetScrollX = worldCenterX - visibleWidth / 2;
-        const targetScrollY = worldCenterY - visibleHeight / 2;
+        // Use Phaser's centerOn method which handles the calculation properly
+        camera.centerOn(worldCenterX, worldCenterY);
         
-        // Set scroll positions directly
-        camera.scrollX = targetScrollX;
-        camera.scrollY = targetScrollY;
-        
-        // Clamp to bounds (allows negative values when image is smaller than viewport)
+        // Then clamp to bounds (allows negative values when image is smaller than viewport)
         this.clampCameraToBounds();
         
         // Log for debugging
@@ -569,15 +559,18 @@ export class GameScene extends Phaser.Scene {
             worldSize: { width: this.worldWidth, height: this.worldHeight },
             cameraSize: { width: camera.width, height: camera.height },
             zoom: camera.zoom,
-            visibleSize: { width: visibleWidth, height: visibleHeight },
             scroll: { x: camera.scrollX, y: camera.scrollY },
-            worldCenter: { x: worldCenterX, y: worldCenterY },
-            targetScroll: { x: targetScrollX, y: targetScrollY }
+            worldCenter: { x: worldCenterX, y: worldCenterY }
         });
     }
     
     centerImageOnMinZoom() {
-        // Legacy method - now just centers at current zoom
+        const camera = this.cameras.main;
+        
+        // Ensure we're at minZoom first
+        camera.zoom = this.minZoom;
+        
+        // Then center the image
         this.centerImage();
     }
 
