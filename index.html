@@ -218,13 +218,7 @@
             #gallery-panel-wrapper {
                 flex: 0 1 auto;
                 min-height: 0;
-                display: grid;
-                grid-template-rows: 1fr;
-                transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            body.gallery-collapsed #gallery-panel-wrapper {
-                grid-template-rows: 0fr;
+                display: block;
             }
 
             #gallery-panel-wrapper > #gallery-container {
@@ -366,9 +360,19 @@
                 flex: 1 1 auto;
                 min-height: 0;
                 padding: 0 12px 8px;
+                max-height: 260px;
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                opacity: 1;
+                transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease, padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            body.gallery-collapsed #gallery-content {
+                max-height: 0;
+                opacity: 0;
+                padding-top: 0;
+                padding-bottom: 0;
             }
             
             #wrong-tap-flash {

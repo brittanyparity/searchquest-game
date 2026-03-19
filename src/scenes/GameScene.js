@@ -544,15 +544,15 @@ export class GameScene extends Phaser.Scene {
         const newWidth = gameSize ? gameSize.width : camera.width;
         const newHeight = gameSize ? gameSize.height : camera.height;
 
-        let nx = 0.5;
-        let ny = 0.5;
+        let anchorX = this.worldWidth ? this.worldWidth * 0.5 : 0;
+        let anchorY = this.worldHeight ? this.worldHeight * 0.5 : 0;
         const zoomMultiple =
             this.fullFitZoom && this.fullFitZoom > 0 ? camera.zoom / this.fullFitZoom : 3;
 
         if (this.worldWidth && this.worldHeight) {
             const mid = camera.getWorldPoint(camera.width * 0.5, camera.height * 0.5);
-            nx = Phaser.Math.Clamp(mid.x / this.worldWidth, 0, 1);
-            ny = Phaser.Math.Clamp(mid.y / this.worldHeight, 0, 1);
+            anchorX = Phaser.Math.Clamp(mid.x, 0, this.worldWidth);
+            anchorY = Phaser.Math.Clamp(mid.y, 0, this.worldHeight);
         }
 
         this.setupLayout(newWidth, newHeight);
@@ -563,14 +563,8 @@ export class GameScene extends Phaser.Scene {
                 this.minZoom,
                 this.maxZoom
             );
-            if (camera.zoom <= this.minZoom + 0.0001) {
-                camera.centerOn(this.worldWidth * 0.5, this.worldHeight * 0.5);
-            } else {
-                const nxc = nx * this.worldWidth;
-                const nyc = ny * this.worldHeight;
-                camera.scrollX = nxc - camera.width / (2 * camera.zoom);
-                camera.scrollY = nyc - camera.height / (2 * camera.zoom);
-            }
+            camera.scrollX = anchorX - camera.width / (2 * camera.zoom);
+            camera.scrollY = anchorY - camera.height / (2 * camera.zoom);
             this.clampCameraToBounds();
         }
     }

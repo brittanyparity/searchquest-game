@@ -122,7 +122,7 @@ export class UIScene extends Phaser.Scene {
         }
 
         const galleryToggle = document.getElementById('gallery-toggle-btn');
-        const galleryPanelWrapper = document.getElementById('gallery-panel-wrapper');
+        const galleryContent = document.getElementById('gallery-content');
         if (galleryToggle && !galleryToggle.dataset.wired) {
             galleryToggle.dataset.wired = '1';
             const syncLayoutAfterPanel = () => {
@@ -130,10 +130,10 @@ export class UIScene extends Phaser.Scene {
                     window.dispatchEvent(new Event('resize'));
                 });
             };
-            if (galleryPanelWrapper && !galleryPanelWrapper.dataset.resizeWired) {
-                galleryPanelWrapper.dataset.resizeWired = '1';
-                galleryPanelWrapper.addEventListener('transitionend', (ev) => {
-                    if (ev.propertyName === 'grid-template-rows') {
+            if (galleryContent && !galleryContent.dataset.resizeWired) {
+                galleryContent.dataset.resizeWired = '1';
+                galleryContent.addEventListener('transitionend', (ev) => {
+                    if (ev.propertyName === 'max-height' || ev.propertyName === 'padding-bottom') {
                         syncLayoutAfterPanel();
                     }
                 });
