@@ -28,6 +28,9 @@ export class UIScene extends Phaser.Scene {
         this.game.events.on('timerUpdated', this.onTimerUpdated, this);
         this.game.events.on('timeUp', this.onTimeUp, this);
         this.game.events.on('allObjectsFound', this.onAllObjectsFound, this);
+        this.game.events.on('attemptsUpdated', this.onAttemptsUpdated, this);
+        this.game.events.on('lifeLost', this.onLifeLost, this);
+        this.game.events.on('outOfLives', this.onOutOfLives, this);
         
         this.buildUI();
         
@@ -59,99 +62,70 @@ export class UIScene extends Phaser.Scene {
     }
     
     buildGameButtons() {
-        // Create settings and hint buttons in the game container
-        const gameContainer = document.getElementById('game-container');
-        if (!gameContainer) return;
-        
-        // Remove existing buttons if they exist
-        const existingSettings = document.getElementById('settings-button');
-        const existingHint = document.getElementById('hint-button');
-        if (existingSettings) existingSettings.remove();
-        if (existingHint) existingHint.remove();
-        
-        // Settings button (top left)
-        const settingsButton = document.createElement('button');
-        settingsButton.id = 'settings-button';
-        settingsButton.innerHTML = '⚙️';
-        settingsButton.style.cssText = `
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255, 255, 255, 0.9);
-            color: #4b5563;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        
-        settingsButton.addEventListener('mousedown', () => {
-            settingsButton.style.transform = 'scale(0.96)';
-        });
-        settingsButton.addEventListener('mouseup', () => {
-            settingsButton.style.transform = 'scale(1)';
-        });
-        settingsButton.addEventListener('touchstart', () => {
-            settingsButton.style.transform = 'scale(0.96)';
-        });
-        settingsButton.addEventListener('touchend', () => {
-            settingsButton.style.transform = 'scale(1)';
-        });
-        settingsButton.addEventListener('click', () => {
-            // TODO: Handle settings click
-            console.log('Settings clicked');
-        });
-        
-        // Hint button (top right)
-        const hintButton = document.createElement('button');
-        hintButton.id = 'hint-button';
-        hintButton.innerHTML = '💡';
-        hintButton.style.cssText = `
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 40px;
-            height: 40px;
-            background-color: #10b981;
-            color: #ffffff;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        
-        hintButton.addEventListener('mousedown', () => {
-            hintButton.style.transform = 'scale(0.96)';
-        });
-        hintButton.addEventListener('mouseup', () => {
-            hintButton.style.transform = 'scale(1)';
-        });
-        hintButton.addEventListener('touchstart', () => {
-            hintButton.style.transform = 'scale(0.96)';
-        });
-        hintButton.addEventListener('touchend', () => {
-            hintButton.style.transform = 'scale(1)';
-        });
-        hintButton.addEventListener('click', () => {
-            this.game.events.emit('hintRequested');
-        });
-        
-        gameContainer.appendChild(settingsButton);
-        gameContainer.appendChild(hintButton);
+        const settingsSlot = document.getElementById('top-bar-settings-slot');
+        if (settingsSlot) {
+            settingsSlot.innerHTML = '';
+            const settingsButton = document.createElement('button');
+            settingsButton.id = 'settings-button';
+            settingsButton.type = 'button';
+            settingsButton.setAttribute('aria-label', 'Settings');
+            settingsButton.innerHTML = '⚙️';
+            settingsButton.style.cssText = `
+                width: 44px;
+                height: 40px;
+                background-color: rgba(255, 255, 255, 0.95);
+                color: #4b5563;
+                border: 1px solid #e5e7eb;
+                border-radius: 10px;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+                transition: transform 0.1s ease, box-shadow 0.1s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            settingsButton.addEventListener('mousedown', () => {
+                settingsButton.style.transform = 'scale(0.96)';
+            });
+            settingsButton.addEventListener('mouseup', () => {
+                settingsButton.style.transform = 'scale(1)';
+            });
+            settingsButton.addEventListener('touchstart', () => {
+                settingsButton.style.transform = 'scale(0.96)';
+            }, { passive: true });
+            settingsButton.addEventListener('touchend', () => {
+                settingsButton.style.transform = 'scale(1)';
+            });
+            settingsButton.addEventListener('click', () => {
+                console.log('Settings clicked');
+            });
+            settingsSlot.appendChild(settingsButton);
+        }
+
+        const hintButton = document.getElementById('hint-button');
+        if (hintButton && !hintButton.dataset.wired) {
+            hintButton.dataset.wired = '1';
+            hintButton.addEventListener('click', () => {
+                this.game.events.emit('hintRequested');
+            });
+        }
+
+        const backButton = document.getElementById('top-bar-back');
+        if (backButton && !backButton.dataset.wired) {
+            backButton.dataset.wired = '1';
+            backButton.addEventListener('click', () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                }
+            });
+        }
+
+        const titleEl = document.getElementById('game-top-bar-title');
+        if (titleEl && !titleEl.dataset.setTitle) {
+            titleEl.dataset.setTitle = '1';
+            titleEl.textContent = 'Search Quest';
+        }
     }
 
     buildGallery() {
@@ -416,6 +390,45 @@ export class UIScene extends Phaser.Scene {
         }
     }
 
+    onAttemptsUpdated({ remaining, max }) {
+        const attemptsDisplay = document.getElementById('attempts-display');
+        if (attemptsDisplay) {
+            const n = Math.max(0, remaining);
+            const cap = max != null ? max : n;
+            attemptsDisplay.textContent = `♥ ${n}/${cap}`;
+        }
+    }
+
+    onLifeLost() {
+        const attemptsDisplay = document.getElementById('attempts-display');
+        if (attemptsDisplay) {
+            attemptsDisplay.classList.remove('life-lost-flash');
+            void attemptsDisplay.offsetWidth;
+            attemptsDisplay.classList.add('life-lost-flash');
+            attemptsDisplay.addEventListener(
+                'animationend',
+                () => attemptsDisplay.classList.remove('life-lost-flash'),
+                { once: true }
+            );
+        }
+
+        const flash = document.getElementById('wrong-tap-flash');
+        if (flash) {
+            flash.classList.add('visible');
+            window.clearTimeout(this._lifeFlashTimer);
+            this._lifeFlashTimer = window.setTimeout(() => {
+                flash.classList.remove('visible');
+            }, 120);
+        }
+    }
+
+    onOutOfLives({ found, total }) {
+        const galleryTitle = document.getElementById('gallery-title');
+        if (galleryTitle) {
+            galleryTitle.textContent = `OUT OF TRIES · FOUND ${found}/${total}`;
+        }
+    }
+
     updateProgress(value) {
         const clamped = Math.max(0, Math.min(1, value));
         const progressBarFill = document.getElementById('progress-bar-fill');
@@ -430,8 +443,12 @@ export class UIScene extends Phaser.Scene {
         this.game.events.off('timerUpdated', this.onTimerUpdated, this);
         this.game.events.off('timeUp', this.onTimeUp, this);
         this.game.events.off('allObjectsFound', this.onAllObjectsFound, this);
+        this.game.events.off('attemptsUpdated', this.onAttemptsUpdated, this);
+        this.game.events.off('lifeLost', this.onLifeLost, this);
+        this.game.events.off('outOfLives', this.onOutOfLives, this);
         this.game.events.off('layoutChanged', this.onLayoutChanged, this);
         this.scale.off('resize', this.handleResize, this);
+        window.clearTimeout(this._lifeFlashTimer);
     }
 }
 

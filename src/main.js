@@ -14,19 +14,16 @@ const getContainerSize = () => {
         const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 100;
         const adHeight = adContainer ? adContainer.offsetHeight : 50;
         
-        // Calculate available height for game container
-        // Use 85% of viewport to leave room for browser UI bars
+        // Calculate available height for game container (body uses ~85% viewport)
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const usableHeight = viewportHeight * 0.85; // Use 85% of viewport
-        const bodyPadding = 8; // 4px top + 4px bottom
-        const gap = 6; // Gap between containers
-        const availableHeight = usableHeight - bodyPadding - (gap * 2) - galleryHeight - adHeight;
+        const bodyPadding = 0;
+        const gap = 0;
+        const availableHeight = usableHeight - bodyPadding - galleryHeight - adHeight;
         
-        // Use 90% of viewport width
         const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-        const usableWidth = viewportWidth * 0.90; // Use 90% of viewport
+        const usableWidth = viewportWidth;
         
-        // Use the calculated width or the container's actual width (whichever is smaller)
         const containerWidth = gameContainer.clientWidth || usableWidth;
         
         return {

@@ -56,6 +56,7 @@ export class GameScene extends Phaser.Scene {
         this.dragStartPoint = new Phaser.Math.Vector2();
         this.cameraStartPoint = new Phaser.Math.Vector2();
         this.lastPinchDistance = 0;
+        this._recentPinch = false;
 
         // --- Hidden objects ----------------------------------------------------
         // These are sample objects using existing art. Swap positions / textures to
@@ -85,6 +86,10 @@ export class GameScene extends Phaser.Scene {
         this.foundObjects = 0;
         this.score = 0;
 
+        this.maxLives = 3;
+        this.remainingLives = this.maxLives;
+        this._downOnUnfoundHidden = false;
+
         // --- Timer -------------------------------------------------------------
         this.totalTime = 60; // seconds
         this.elapsed = 0;
@@ -92,6 +97,17 @@ export class GameScene extends Phaser.Scene {
 
         // --- Input: drag panning ----------------------------------------------
         this.input.on('pointerdown', (pointer) => {
+            this._downOnUnfoundHidden = false;
+            if (!this.gameOver) {
+                const hits = this.input.hitTestPointer(pointer) || [];
+                const onUnfound = this.hiddenObjects.some(
+                    (ho) => !ho.sprite.getData('found') && hits.includes(ho.sprite)
+                );
+                if (onUnfound) {
+                    this._downOnUnfoundHidden = true;
+                }
+            }
+
             const activePointers = this.getActivePointers();
 
             if (activePointers.length === 1) {
@@ -102,7 +118,8 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
-        this.input.on('pointerup', () => {
+        this.input.on('pointerup', (pointer) => {
+            this.handleLastPointerReleased(pointer);
             this.isDragging = false;
             this.lastPinchDistance = 0;
         });
@@ -164,6 +181,10 @@ export class GameScene extends Phaser.Scene {
                 }))
             };
             this.game.events.emit('objectsCreated', objectsData);
+            this.game.events.emit('attemptsUpdated', {
+                remaining: this.remainingLives,
+                max: this.maxLives
+            });
         });
 
         // Notify UI about initial object set
@@ -180,6 +201,10 @@ export class GameScene extends Phaser.Scene {
             console.log('🎮 GameScene emitting objectsCreated event:', objectsData);
             console.log('🎮 Event listeners count:', this.game.events.listeners('objectsCreated')?.length || 0);
             this.game.events.emit('objectsCreated', objectsData);
+            this.game.events.emit('attemptsUpdated', {
+                remaining: this.remainingLives,
+                max: this.maxLives
+            });
         });
     }
 
@@ -210,6 +235,68 @@ export class GameScene extends Phaser.Scene {
     // -------------------------------------------------------------------------
     // Hidden object interactions
     // -------------------------------------------------------------------------
+
+    handleLastPointerReleased(pointer) {
+        if (this.getActivePointers().length > 0) {
+            return;
+        }
+        if (this._recentPinch) {
+            this._recentPinch = false;
+            return;
+        }
+        this.handlePossibleWrongTap(pointer);
+    }
+
+    handlePossibleWrongTap(pointer) {
+        const wasUnfoundDown = this._downOnUnfoundHidden;
+        this._downOnUnfoundHidden = false;
+
+        if (this.gameOver) {
+            return;
+        }
+        if (wasUnfoundDown) {
+            return;
+        }
+
+        const maxDist = 18;
+        const maxDuration = 500;
+        const dist = Phaser.Math.Distance.Between(pointer.downX, pointer.downY, pointer.x, pointer.y);
+        if (dist > maxDist) {
+            return;
+        }
+        if (pointer.getDuration() > maxDuration) {
+            return;
+        }
+
+        this.loseLife();
+    }
+
+    loseLife() {
+        if (this.gameOver || this.remainingLives <= 0) {
+            return;
+        }
+
+        this.remainingLives -= 1;
+        this.game.events.emit('attemptsUpdated', {
+            remaining: this.remainingLives,
+            max: this.maxLives
+        });
+        this.game.events.emit('lifeLost', { remaining: this.remainingLives });
+
+        const cam = this.cameras.main;
+        if (cam && cam.shake) {
+            cam.shake(220, 0.035);
+        }
+
+        if (this.remainingLives <= 0) {
+            this.gameOver = true;
+            this.game.events.emit('outOfLives', {
+                score: this.score,
+                found: this.foundObjects,
+                total: this.totalObjects
+            });
+        }
+    }
 
     handleObjectFound(sprite, cfg) {
         if (sprite.getData('found') || this.gameOver) {
@@ -288,6 +375,9 @@ export class GameScene extends Phaser.Scene {
         const worldY = camera.scrollY + pinchCenterY / camera.zoom;
 
         const delta = dist - this.lastPinchDistance;
+        if (Math.abs(delta) > 1.5) {
+            this._recentPinch = true;
+        }
         // More responsive zoom factor
         const zoomFactor = 1 + delta * 0.001; // Reduced from 0.002
 
