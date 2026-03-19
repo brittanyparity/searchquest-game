@@ -31,7 +31,6 @@ export class UIScene extends Phaser.Scene {
         this.game.events.on('attemptsUpdated', this.onAttemptsUpdated, this);
         this.game.events.on('lifeLost', this.onLifeLost, this);
         this.game.events.on('outOfLives', this.onOutOfLives, this);
-        this.game.events.on('viewportQuadrantChanged', this.onViewportQuadrantChanged, this);
         
         this.buildUI();
         
@@ -120,12 +119,6 @@ export class UIScene extends Phaser.Scene {
                     window.history.back();
                 }
             });
-        }
-
-        const titleEl = document.getElementById('game-top-bar-title');
-        if (titleEl && !titleEl.dataset.setTitle) {
-            titleEl.dataset.setTitle = '1';
-            titleEl.textContent = 'Search Quest';
         }
 
         const galleryToggle = document.getElementById('gallery-toggle-btn');
@@ -347,7 +340,7 @@ export class UIScene extends Phaser.Scene {
         this.pendingObjects = objects;
         
         // Initialize gallery title with total count
-        const galleryTitle = document.getElementById('gallery-title');
+        const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `FIND THE OBJECTS · 0/${total || objects.length}`;
         }
@@ -379,7 +372,7 @@ export class UIScene extends Phaser.Scene {
         }
 
         // Update gallery title with score and found count
-        const galleryTitle = document.getElementById('gallery-title');
+        const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `FIND THE OBJECTS · ${found}/${total}`;
         }
@@ -405,14 +398,14 @@ export class UIScene extends Phaser.Scene {
     }
 
     onTimeUp({ score, found, total }) {
-        const galleryTitle = document.getElementById('gallery-title');
+        const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `TIME UP · FOUND ${found}/${total}`;
         }
     }
 
     onAllObjectsFound({ score, timeRemaining }) {
-        const galleryTitle = document.getElementById('gallery-title');
+        const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `ALL OBJECTS FOUND! ${timeRemaining.toFixed(1)}s LEFT`;
         }
@@ -451,16 +444,10 @@ export class UIScene extends Phaser.Scene {
     }
 
     onOutOfLives({ found, total }) {
-        const galleryTitle = document.getElementById('gallery-title');
+        const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `OUT OF TRIES · FOUND ${found}/${total}`;
         }
-    }
-
-    onViewportQuadrantChanged({ quadrant }) {
-        document.querySelectorAll('.quadrant-cell').forEach((el) => {
-            el.classList.toggle('is-active', el.dataset.quadrant === quadrant);
-        });
     }
 
     updateProgress(value) {
@@ -480,7 +467,6 @@ export class UIScene extends Phaser.Scene {
         this.game.events.off('attemptsUpdated', this.onAttemptsUpdated, this);
         this.game.events.off('lifeLost', this.onLifeLost, this);
         this.game.events.off('outOfLives', this.onOutOfLives, this);
-        this.game.events.off('viewportQuadrantChanged', this.onViewportQuadrantChanged, this);
         this.game.events.off('layoutChanged', this.onLayoutChanged, this);
         this.scale.off('resize', this.handleResize, this);
         window.clearTimeout(this._lifeFlashTimer);

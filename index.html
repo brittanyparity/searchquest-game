@@ -184,21 +184,7 @@
                 overflow: hidden;
             }
 
-            #quadrant-mini-map {
-                position: absolute;
-                bottom: 10px;
-                right: 10px;
-                left: auto;
-                z-index: 15;
-                pointer-events: none;
-                filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
-            }
-
             #gallery-toggle-btn {
-                position: absolute;
-                bottom: 10px;
-                left: 10px;
-                z-index: 16;
                 width: 42px;
                 height: 42px;
                 display: flex;
@@ -246,28 +232,6 @@
                 overflow: hidden;
             }
 
-            .quadrant-grid {
-                display: grid;
-                grid-template-columns: 13px 13px;
-                grid-template-rows: 13px 13px;
-                gap: 3px;
-                padding: 7px;
-                background: rgba(255, 255, 255, 0.94);
-                border-radius: 10px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-            }
-
-            .quadrant-cell {
-                display: block;
-                background: #d1d5db;
-                border-radius: 3px;
-            }
-
-            .quadrant-cell.is-active {
-                background: #10b981;
-                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
-            }
-            
             #gallery-container {
                 flex: 0 1 auto;
                 min-height: 0;
@@ -281,14 +245,27 @@
             }
 
             #gallery-stats-row {
-                display: flex;
+                display: grid;
+                grid-template-columns: 42px 1fr 44px;
                 align-items: center;
-                justify-content: space-between;
-                gap: 10px;
+                gap: 12px;
                 padding: 10px 14px 8px;
                 flex-shrink: 0;
                 border-top: 1px solid #e5e7eb;
                 background-color: #f9fafb;
+            }
+
+            #status-tile {
+                justify-self: center;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+                padding: 8px 14px;
+                border-radius: 999px;
+                border: 1px solid #e5e7eb;
+                background: #ffffff;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             }
 
             #timer-display {
@@ -296,15 +273,16 @@
                 font-size: 15px;
                 font-weight: 700;
                 color: #1f2937;
-                min-width: 52px;
+                min-width: 56px;
+                text-align: center;
             }
 
             #attempts-display {
-                flex: 1;
-                text-align: center;
                 font-size: 15px;
                 font-weight: 700;
                 color: #374151;
+                min-width: 56px;
+                text-align: center;
                 transition: color 0.15s ease, transform 0.15s ease;
             }
 
@@ -393,16 +371,6 @@
                 flex-direction: column;
             }
             
-            #gallery-title {
-                font-family: Arial, sans-serif;
-                font-size: 15px;
-                font-weight: bold;
-                color: #1f2937;
-                text-align: center;
-                padding: 0 12px 8px;
-                flex-shrink: 0;
-            }
-
             #wrong-tap-flash {
                 pointer-events: none;
                 position: fixed;
@@ -425,32 +393,25 @@
                 <div class="top-bar-side top-bar-side--left">
                     <button type="button" id="top-bar-back" aria-label="Back">←</button>
                 </div>
-                <h1 id="game-top-bar-title">Search Quest</h1>
+                <h1 id="game-top-bar-title">FIND THE OBJECTS · 0/5</h1>
                 <div class="top-bar-side top-bar-side--right" id="top-bar-settings-slot"></div>
             </header>
             <div id="game-shell">
-                <button type="button" id="gallery-toggle-btn" aria-label="Hide items panel" aria-expanded="true" title="Show or hide items">
-                    <span class="gallery-toggle-icon" aria-hidden="true">▼</span>
-                </button>
                 <div id="game-container" class="game-container"></div>
-                <div id="quadrant-mini-map" aria-hidden="true" title="Area map">
-                    <div class="quadrant-grid">
-                        <span class="quadrant-cell" data-quadrant="tl"></span>
-                        <span class="quadrant-cell" data-quadrant="tr"></span>
-                        <span class="quadrant-cell" data-quadrant="bl"></span>
-                        <span class="quadrant-cell" data-quadrant="br"></span>
-                    </div>
-                </div>
             </div>
         </div>
         <div id="gallery-panel-wrapper">
             <div id="gallery-container" class="game-container">
                 <div id="gallery-stats-row">
-                    <span id="timer-display">01:00</span>
-                    <span id="attempts-display">♥ 3/3</span>
+                    <button type="button" id="gallery-toggle-btn" aria-label="Hide items panel" aria-expanded="true" title="Show or hide items">
+                        <span class="gallery-toggle-icon" aria-hidden="true">▼</span>
+                    </button>
+                    <div id="status-tile">
+                        <span id="timer-display">01:00</span>
+                        <span id="attempts-display">♥ 3/3</span>
+                    </div>
                     <button type="button" id="hint-button" aria-label="Hint">💡</button>
                 </div>
-                <div id="gallery-title">FIND THE OBJECTS · 0/5</div>
                 <div id="gallery-content"></div>
             </div>
         </div>
