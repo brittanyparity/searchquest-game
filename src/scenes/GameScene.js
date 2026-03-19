@@ -29,7 +29,7 @@ export class GameScene extends Phaser.Scene {
         this.setupLayout();
         // fullFitZoom / minZoom / maxZoom set by updateZoom() inside setupLayout
 
-        // Start centered on the image at ~300% of full-fit zoom (always stay zoomed in vs full scene)
+        // Start zoomed in (~3× “whole image fits”) — clamped to [minZoom, maxZoom]
         const startZoom = this.fullFitZoom * 3;
         camera.zoom = Phaser.Math.Clamp(startZoom, this.minZoom, this.maxZoom);
         this.centerImage();
@@ -549,11 +549,11 @@ export class GameScene extends Phaser.Scene {
 
         const fitZoomX = camera.width / this.worldWidth;
         const fitZoomY = camera.height / this.worldHeight;
-        // Zoom that fits the entire search image in the view (reference only)
+        // Entire image visible (both axes) — used for resize ratios and start zoom
         this.fullFitZoom = Math.min(fitZoomX, fitZoomY);
-        // Never zoom out past "full image" fit; stay at least 150% of that reference zoom (more zoomed in)
-        this.minZoom = this.fullFitZoom * 1.5;
-        this.maxZoom = this.fullFitZoom * 24;
+        // Most zoomed out: image width exactly matches viewport width (100% of view)
+        this.minZoom = fitZoomX;
+        this.maxZoom = Math.max(fitZoomX, fitZoomY) * 24;
 
         camera.zoom = Phaser.Math.Clamp(camera.zoom, this.minZoom, this.maxZoom);
     }
