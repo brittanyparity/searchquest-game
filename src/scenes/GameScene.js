@@ -130,7 +130,7 @@ export class GameScene extends Phaser.Scene {
             const camera = this.cameras.main;
 
             const worldBefore = camera.getWorldPoint(pointer.x, pointer.y);
-            
+
             // More responsive zoom factor (smaller increments)
             const zoomDir = dy > 0 ? -1 : 1;
             const zoomFactor = 1 + zoomDir * 0.05; // Reduced from 0.1 to 0.05 for finer control
@@ -146,6 +146,7 @@ export class GameScene extends Phaser.Scene {
             camera.scrollY += worldBefore.y - worldAfter.y;
 
             this.clampCameraToBounds();
+            this.recenterWhenFullyZoomedOut(camera);
         });
 
         // --- Hint system -------------------------------------------------------
@@ -388,6 +389,8 @@ export class GameScene extends Phaser.Scene {
         // More responsive zoom factor
         const zoomFactor = 1 + delta * 0.001; // Reduced from 0.002
 
+        const zoomBeforePinch = camera.zoom;
+
         camera.zoom = Phaser.Math.Clamp(
             camera.zoom * zoomFactor,
             this.minZoom,
@@ -401,6 +404,12 @@ export class GameScene extends Phaser.Scene {
         this.lastPinchDistance = dist;
 
         this.clampCameraToBounds();
+        if (
+            zoomBeforePinch > this.minZoom + 0.0001 &&
+            camera.zoom <= this.minZoom + 0.0001
+        ) {
+            this.recenterWhenFullyZoomedOut(camera);
+        }
     }
 
     clampCameraToBounds() {
@@ -409,6 +418,21 @@ export class GameScene extends Phaser.Scene {
             cam.scrollX = cam.clampX(cam.scrollX);
             cam.scrollY = cam.clampY(cam.scrollY);
         }
+    }
+
+    /**
+     * At minimum zoom (most zoomed out), zoom-to-cursor math often leaves the view biased
+     * to one side after clamp. Re-center on the image so it sits in the middle of the view.
+     */
+    recenterWhenFullyZoomedOut(camera) {
+        if (!this.worldWidth || !this.minZoom) {
+            return;
+        }
+        if (camera.zoom > this.minZoom + 0.0001) {
+            return;
+        }
+        camera.centerOn(this.worldWidth * 0.5, this.worldHeight * 0.5);
+        this.clampCameraToBounds();
     }
 
     // -------------------------------------------------------------------------
@@ -504,10 +528,14 @@ export class GameScene extends Phaser.Scene {
                 this.minZoom,
                 this.maxZoom
             );
-            const nxc = nx * this.worldWidth;
-            const nyc = ny * this.worldHeight;
-            camera.scrollX = nxc - camera.width / (2 * camera.zoom);
-            camera.scrollY = nyc - camera.height / (2 * camera.zoom);
+            if (camera.zoom <= this.minZoom + 0.0001) {
+                camera.centerOn(this.worldWidth * 0.5, this.worldHeight * 0.5);
+            } else {
+                const nxc = nx * this.worldWidth;
+                const nyc = ny * this.worldHeight;
+                camera.scrollX = nxc - camera.width / (2 * camera.zoom);
+                camera.scrollY = nyc - camera.height / (2 * camera.zoom);
+            }
             this.clampCameraToBounds();
         }
     }
