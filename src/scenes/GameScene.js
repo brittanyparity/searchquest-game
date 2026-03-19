@@ -544,27 +544,24 @@ export class GameScene extends Phaser.Scene {
         const newWidth = gameSize ? gameSize.width : camera.width;
         const newHeight = gameSize ? gameSize.height : camera.height;
 
+        // Phaser scroll uses world space at the viewport center: midPoint.x === scrollX + width/2
+        // (see Camera#preRender). Do not divide by zoom here — that was shifting the view on resize.
+        const preLayoutZoom = camera.zoom;
         let anchorX = this.worldWidth ? this.worldWidth * 0.5 : 0;
         let anchorY = this.worldHeight ? this.worldHeight * 0.5 : 0;
-        const zoomMultiple =
-            this.fullFitZoom && this.fullFitZoom > 0 ? camera.zoom / this.fullFitZoom : 3;
 
         if (this.worldWidth && this.worldHeight) {
-            const mid = camera.getWorldPoint(camera.width * 0.5, camera.height * 0.5);
-            anchorX = Phaser.Math.Clamp(mid.x, 0, this.worldWidth);
-            anchorY = Phaser.Math.Clamp(mid.y, 0, this.worldHeight);
+            anchorX = camera.midPoint.x;
+            anchorY = camera.midPoint.y;
         }
 
         this.setupLayout(newWidth, newHeight);
 
         if (this.worldWidth && this.worldHeight) {
-            camera.zoom = Phaser.Math.Clamp(
-                zoomMultiple * this.fullFitZoom,
-                this.minZoom,
-                this.maxZoom
-            );
-            camera.scrollX = anchorX - camera.width / (2 * camera.zoom);
-            camera.scrollY = anchorY - camera.height / (2 * camera.zoom);
+            // Keep the same camera zoom level; only clamp if new limits require it — not a ratio of fullFitZoom,
+            // which changes when the viewport size changes and would re-scale the scene.
+            camera.zoom = Phaser.Math.Clamp(preLayoutZoom, this.minZoom, this.maxZoom);
+            camera.centerOn(anchorX, anchorY);
             this.clampCameraToBounds();
         }
     }
