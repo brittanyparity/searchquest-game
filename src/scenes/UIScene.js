@@ -31,6 +31,7 @@ export class UIScene extends Phaser.Scene {
         this.game.events.on('attemptsUpdated', this.onAttemptsUpdated, this);
         this.game.events.on('lifeLost', this.onLifeLost, this);
         this.game.events.on('outOfLives', this.onOutOfLives, this);
+        this.game.events.on('viewportQuadrantChanged', this.onViewportQuadrantChanged, this);
         
         this.buildUI();
         
@@ -429,6 +430,12 @@ export class UIScene extends Phaser.Scene {
         }
     }
 
+    onViewportQuadrantChanged({ quadrant }) {
+        document.querySelectorAll('.quadrant-cell').forEach((el) => {
+            el.classList.toggle('is-active', el.dataset.quadrant === quadrant);
+        });
+    }
+
     updateProgress(value) {
         const clamped = Math.max(0, Math.min(1, value));
         const progressBarFill = document.getElementById('progress-bar-fill');
@@ -446,6 +453,7 @@ export class UIScene extends Phaser.Scene {
         this.game.events.off('attemptsUpdated', this.onAttemptsUpdated, this);
         this.game.events.off('lifeLost', this.onLifeLost, this);
         this.game.events.off('outOfLives', this.onOutOfLives, this);
+        this.game.events.off('viewportQuadrantChanged', this.onViewportQuadrantChanged, this);
         this.game.events.off('layoutChanged', this.onLayoutChanged, this);
         this.scale.off('resize', this.handleResize, this);
         window.clearTimeout(this._lifeFlashTimer);
