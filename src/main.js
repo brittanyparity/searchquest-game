@@ -7,18 +7,20 @@ import { UIScene } from './scenes/UIScene.js';
 const getContainerSize = () => {
     const gameContainer = document.getElementById('game-container');
     const galleryContainer = document.getElementById('gallery-container');
+    const adContainer = document.getElementById('ad-container');
     
     if (gameContainer) {
-        // Get actual gallery container height from DOM (set dynamically)
-        const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 120;
+        // Get actual container heights from DOM
+        const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 80;
+        const adHeight = adContainer ? adContainer.offsetHeight : 50;
         
         // Calculate available height for game container
         // Use 85% of viewport to leave room for browser UI bars
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const usableHeight = viewportHeight * 0.85; // Use 85% of viewport
         const bodyPadding = 8; // 4px top + 4px bottom
-        const gap = 6; // Gap between game container and gallery container
-        const availableHeight = usableHeight - bodyPadding - gap - galleryHeight;
+        const gap = 6; // Gap between containers
+        const availableHeight = usableHeight - bodyPadding - (gap * 2) - galleryHeight - adHeight;
         
         // Use 90% of viewport width
         const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -31,11 +33,12 @@ const getContainerSize = () => {
             width: Math.min(containerWidth, usableWidth),
             height: Math.max(300, availableHeight),
             galleryHeight: galleryHeight,
+            adHeight: adHeight,
             spacing: gap
         };
     }
     // Fallback
-    return { width: 393, height: 600, galleryHeight: 120, spacing: 12 };
+    return { width: 393, height: 600, galleryHeight: 80, adHeight: 50, spacing: 12 };
 };
 
 const initialSize = getContainerSize();

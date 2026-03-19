@@ -52,9 +52,106 @@ export class UIScene extends Phaser.Scene {
     buildUI() {
         // Now we build UI using DOM elements in separate containers
         // Gallery container for items to search for
-        console.log('🔨 Building UI (gallery container)...');
+        console.log('🔨 Building UI (gallery container and buttons)...');
         this.buildGallery();
+        this.buildGameButtons();
         console.log('✅ UI build complete');
+    }
+    
+    buildGameButtons() {
+        // Create settings and hint buttons in the game container
+        const gameContainer = document.getElementById('game-container');
+        if (!gameContainer) return;
+        
+        // Remove existing buttons if they exist
+        const existingSettings = document.getElementById('settings-button');
+        const existingHint = document.getElementById('hint-button');
+        if (existingSettings) existingSettings.remove();
+        if (existingHint) existingHint.remove();
+        
+        // Settings button (top left)
+        const settingsButton = document.createElement('button');
+        settingsButton.id = 'settings-button';
+        settingsButton.innerHTML = '⚙️';
+        settingsButton.style.cssText = `
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #4b5563;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        settingsButton.addEventListener('mousedown', () => {
+            settingsButton.style.transform = 'scale(0.96)';
+        });
+        settingsButton.addEventListener('mouseup', () => {
+            settingsButton.style.transform = 'scale(1)';
+        });
+        settingsButton.addEventListener('touchstart', () => {
+            settingsButton.style.transform = 'scale(0.96)';
+        });
+        settingsButton.addEventListener('touchend', () => {
+            settingsButton.style.transform = 'scale(1)';
+        });
+        settingsButton.addEventListener('click', () => {
+            // TODO: Handle settings click
+            console.log('Settings clicked');
+        });
+        
+        // Hint button (top right)
+        const hintButton = document.createElement('button');
+        hintButton.id = 'hint-button';
+        hintButton.innerHTML = '💡';
+        hintButton.style.cssText = `
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            background-color: #10b981;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        hintButton.addEventListener('mousedown', () => {
+            hintButton.style.transform = 'scale(0.96)';
+        });
+        hintButton.addEventListener('mouseup', () => {
+            hintButton.style.transform = 'scale(1)';
+        });
+        hintButton.addEventListener('touchstart', () => {
+            hintButton.style.transform = 'scale(0.96)';
+        });
+        hintButton.addEventListener('touchend', () => {
+            hintButton.style.transform = 'scale(1)';
+        });
+        hintButton.addEventListener('click', () => {
+            this.game.events.emit('hintRequested');
+        });
+        
+        gameContainer.appendChild(settingsButton);
+        gameContainer.appendChild(hintButton);
     }
 
     buildGallery() {
