@@ -60,6 +60,13 @@
                 max-width: 100%;
                 touch-action: manipulation;
             }
+
+            /* Keep gallery + ad above iOS Safari bottom chrome (URL bar / toolbar) */
+            @media (hover: none) and (pointer: coarse) {
+                body {
+                    padding-bottom: calc(var(--safe-area-inset-bottom) + var(--vv-bottom-gap));
+                }
+            }
             
     
             ol, ul {
@@ -290,7 +297,6 @@
                 align-items: center;
                 justify-content: center;
                 padding: 8px;
-                padding-bottom: max(8px, calc(8px + var(--safe-area-inset-bottom)));
                 background-color: #f3f4f6;
                 border-top: 1px solid #e5e7eb;
                 box-sizing: border-box;

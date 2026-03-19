@@ -64,3 +64,23 @@ if (window.visualViewport) {
         window.scrollTo(0, 0);
     });
 }
+
+/** Extra bottom inset so the UI stack clears mobile Safari’s bottom toolbar / URL strip */
+const syncMobileBottomGap = () => {
+    const vv = window.visualViewport;
+    if (!vv) {
+        return;
+    }
+    const obscured = window.innerHeight - vv.height - vv.offsetTop;
+    const px = Math.max(44, Math.round(obscured + 16));
+    document.documentElement.style.setProperty('--vv-bottom-gap', `${px}px`);
+};
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncMobileBottomGap);
+    window.visualViewport.addEventListener('scroll', syncMobileBottomGap);
+}
+window.addEventListener('orientationchange', () => {
+    requestAnimationFrame(syncMobileBottomGap);
+});
+syncMobileBottomGap();
