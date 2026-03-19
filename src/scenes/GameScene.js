@@ -29,23 +29,24 @@ export class GameScene extends Phaser.Scene {
         // setupLayout() already calls updateZoom(), so minZoom is set
         
         // --- Camera config -----------------------------------------------------
-        // Set initial zoom to minimum (fully zoomed out) and center the image
+        // Set initial zoom to 25% more than minZoom (zoomed in by 25%)
         // Do this AFTER setupLayout so camera dimensions are correct
-        camera.zoom = this.minZoom;
+        const initialZoom = this.minZoom * 1.25;
+        camera.zoom = Phaser.Math.Clamp(initialZoom, this.minZoom, this.maxZoom);
         
-        // Center immediately and then again after delays to ensure it sticks
-        this.centerImageOnMinZoom();
+        // Center the image immediately and then again after delays to ensure it sticks
+        this.centerImage();
         
         // Use delays to ensure camera dimensions are fully set
         // Call multiple times to ensure it centers properly after all setup
         this.time.delayedCall(50, () => {
-            this.centerImageOnMinZoom();
+            this.centerImage();
         });
         this.time.delayedCall(200, () => {
-            this.centerImageOnMinZoom();
+            this.centerImage();
         });
         this.time.delayedCall(500, () => {
-            this.centerImageOnMinZoom();
+            this.centerImage();
         });
 
         // Enable a couple of extra pointers so pinch works well on mobile
@@ -533,16 +534,13 @@ export class GameScene extends Phaser.Scene {
         }
     }
     
-    centerImageOnMinZoom() {
+    centerImage() {
         const camera = this.cameras.main;
-        
-        // Ensure we're at minZoom
-        camera.zoom = this.minZoom;
         
         // Verify camera dimensions are valid
         if (camera.width === 0 || camera.height === 0 || !this.worldWidth || !this.worldHeight) {
             console.warn('Camera or world dimensions not set, retrying centering...');
-            this.time.delayedCall(50, () => this.centerImageOnMinZoom());
+            this.time.delayedCall(50, () => this.centerImage());
             return;
         }
         
@@ -576,6 +574,11 @@ export class GameScene extends Phaser.Scene {
             worldCenter: { x: worldCenterX, y: worldCenterY },
             targetScroll: { x: targetScrollX, y: targetScrollY }
         });
+    }
+    
+    centerImageOnMinZoom() {
+        // Legacy method - now just centers at current zoom
+        this.centerImage();
     }
 
     shutdown() {
