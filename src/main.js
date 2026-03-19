@@ -44,7 +44,28 @@ const resizeGameToContainer = () => {
     game.scale.resize(width, height);
 };
 
-window.addEventListener('resize', resizeGameToContainer);
+/**
+ * Pin document height to the *visual* viewport (iOS Safari) so flex layout + padding
+ * stay inside what’s actually visible — avoids the ad row sitting under the toolbar.
+ */
+const syncViewportLayout = () => {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+
+    if (vv) {
+        const h = Math.max(1, Math.round(vv.height));
+        root.style.setProperty('--app-visible-height', `${h}px`);
+        const obscured = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        const bottomPad = Math.max(10, Math.min(24, Math.round(10 + obscured * 0.4)));
+        root.style.setProperty('--vv-bottom-gap', `${bottomPad}px`);
+    } else {
+        root.style.removeProperty('--app-visible-height');
+    }
+
+    resizeGameToContainer();
+};
+
+window.addEventListener('resize', syncViewportLayout);
 
 if (typeof ResizeObserver !== 'undefined') {
     const gameContainer = document.getElementById('game-container');
@@ -55,32 +76,19 @@ if (typeof ResizeObserver !== 'undefined') {
 }
 
 requestAnimationFrame(() => {
-    resizeGameToContainer();
+    syncViewportLayout();
 });
 
 if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', resizeGameToContainer);
+    window.visualViewport.addEventListener('resize', syncViewportLayout);
     window.visualViewport.addEventListener('scroll', () => {
         window.scrollTo(0, 0);
+        syncViewportLayout();
     });
 }
 
-/** Extra bottom inset so the UI stack clears mobile Safari’s bottom toolbar / URL strip */
-const syncMobileBottomGap = () => {
-    const vv = window.visualViewport;
-    if (!vv) {
-        return;
-    }
-    const obscured = window.innerHeight - vv.height - vv.offsetTop;
-    const px = Math.max(44, Math.round(obscured + 16));
-    document.documentElement.style.setProperty('--vv-bottom-gap', `${px}px`);
-};
-
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncMobileBottomGap);
-    window.visualViewport.addEventListener('scroll', syncMobileBottomGap);
-}
 window.addEventListener('orientationchange', () => {
-    requestAnimationFrame(syncMobileBottomGap);
+    requestAnimationFrame(syncViewportLayout);
 });
-syncMobileBottomGap();
+
+syncViewportLayout();
