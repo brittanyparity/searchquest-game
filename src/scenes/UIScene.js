@@ -127,6 +127,33 @@ export class UIScene extends Phaser.Scene {
             titleEl.dataset.setTitle = '1';
             titleEl.textContent = 'Search Quest';
         }
+
+        const galleryToggle = document.getElementById('gallery-toggle-btn');
+        const galleryPanelWrapper = document.getElementById('gallery-panel-wrapper');
+        if (galleryToggle && !galleryToggle.dataset.wired) {
+            galleryToggle.dataset.wired = '1';
+            const syncLayoutAfterPanel = () => {
+                window.requestAnimationFrame(() => {
+                    window.dispatchEvent(new Event('resize'));
+                });
+            };
+            if (galleryPanelWrapper && !galleryPanelWrapper.dataset.resizeWired) {
+                galleryPanelWrapper.dataset.resizeWired = '1';
+                galleryPanelWrapper.addEventListener('transitionend', (ev) => {
+                    if (ev.propertyName === 'grid-template-rows') {
+                        syncLayoutAfterPanel();
+                    }
+                });
+            }
+            galleryToggle.addEventListener('click', () => {
+                const collapsed = document.body.classList.toggle('gallery-collapsed');
+                galleryToggle.setAttribute('aria-expanded', String(!collapsed));
+                const label = collapsed ? 'Show items panel' : 'Hide items panel';
+                galleryToggle.setAttribute('aria-label', label);
+                galleryToggle.setAttribute('title', label);
+                syncLayoutAfterPanel();
+            });
+        }
     }
 
     buildGallery() {

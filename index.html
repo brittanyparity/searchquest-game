@@ -187,10 +187,63 @@
             #quadrant-mini-map {
                 position: absolute;
                 bottom: 10px;
-                left: 10px;
+                right: 10px;
+                left: auto;
                 z-index: 15;
                 pointer-events: none;
                 filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+            }
+
+            #gallery-toggle-btn {
+                position: absolute;
+                bottom: 10px;
+                left: 10px;
+                z-index: 16;
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.94);
+                color: #374151;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+                transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+            }
+
+            #gallery-toggle-btn:active {
+                transform: scale(0.96);
+            }
+
+            .gallery-toggle-icon {
+                display: block;
+                font-size: 14px;
+                line-height: 1;
+                transition: transform 0.28s ease;
+            }
+
+            body.gallery-collapsed .gallery-toggle-icon {
+                transform: rotate(180deg);
+            }
+
+            #gallery-panel-wrapper {
+                flex: 0 1 auto;
+                min-height: 0;
+                display: grid;
+                grid-template-rows: 1fr;
+                transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            body.gallery-collapsed #gallery-panel-wrapper {
+                grid-template-rows: 0fr;
+            }
+
+            #gallery-panel-wrapper > #gallery-container {
+                min-height: 0;
+                overflow: hidden;
             }
 
             .quadrant-grid {
@@ -376,6 +429,9 @@
                 <div class="top-bar-side top-bar-side--right" id="top-bar-settings-slot"></div>
             </header>
             <div id="game-shell">
+                <button type="button" id="gallery-toggle-btn" aria-label="Hide items panel" aria-expanded="true" title="Show or hide items">
+                    <span class="gallery-toggle-icon" aria-hidden="true">▼</span>
+                </button>
                 <div id="game-container" class="game-container"></div>
                 <div id="quadrant-mini-map" aria-hidden="true" title="Area map">
                     <div class="quadrant-grid">
@@ -387,14 +443,16 @@
                 </div>
             </div>
         </div>
-        <div id="gallery-container" class="game-container">
-            <div id="gallery-stats-row">
-                <span id="timer-display">01:00</span>
-                <span id="attempts-display">♥ 3/3</span>
-                <button type="button" id="hint-button" aria-label="Hint">💡</button>
+        <div id="gallery-panel-wrapper">
+            <div id="gallery-container" class="game-container">
+                <div id="gallery-stats-row">
+                    <span id="timer-display">01:00</span>
+                    <span id="attempts-display">♥ 3/3</span>
+                    <button type="button" id="hint-button" aria-label="Hint">💡</button>
+                </div>
+                <div id="gallery-title">FIND THE OBJECTS · 0/5</div>
+                <div id="gallery-content"></div>
             </div>
-            <div id="gallery-title">FIND THE OBJECTS · 0/5</div>
-            <div id="gallery-content"></div>
         </div>
         <div id="ad-container">
             <div id="ad-placeholder">Banner Ad</div>
