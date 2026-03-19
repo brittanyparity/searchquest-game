@@ -339,10 +339,15 @@ export class UIScene extends Phaser.Scene {
         // Store objects
         this.pendingObjects = objects;
         
-        // Initialize gallery title with total count
         const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
-            galleryTitle.textContent = `FIND THE OBJECTS · 0/${total || objects.length}`;
+            galleryTitle.textContent = 'FIND THE OBJECTS';
+        }
+
+        const foundDisplay = document.getElementById('found-display');
+        if (foundDisplay) {
+            const n = total || objects.length;
+            foundDisplay.textContent = `0/${n}`;
         }
         
         // Try to populate immediately
@@ -402,6 +407,10 @@ export class UIScene extends Phaser.Scene {
         if (galleryTitle) {
             galleryTitle.textContent = `TIME UP · FOUND ${found}/${total}`;
         }
+        const foundDisplay = document.getElementById('found-display');
+        if (foundDisplay) {
+            foundDisplay.textContent = `${found}/${total}`;
+        }
     }
 
     onAllObjectsFound({ score, timeRemaining }) {
@@ -447,6 +456,10 @@ export class UIScene extends Phaser.Scene {
         const galleryTitle = document.getElementById('game-top-bar-title');
         if (galleryTitle) {
             galleryTitle.textContent = `OUT OF TRIES · FOUND ${found}/${total}`;
+        }
+        const foundDisplay = document.getElementById('found-display');
+        if (foundDisplay) {
+            foundDisplay.textContent = `${found}/${total}`;
         }
     }
 
