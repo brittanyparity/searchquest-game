@@ -3,6 +3,7 @@ export class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
         this.fullFitZoom = 1;
+        this._recenterTween = null;
     }
 
     create() {
@@ -422,7 +423,7 @@ export class GameScene extends Phaser.Scene {
 
     /**
      * At minimum zoom (most zoomed out), zoom-to-cursor math often leaves the view biased
-     * to one side after clamp. Re-center on the image so it sits in the middle of the view.
+     * after clamp. Ease scroll toward image center instead of snapping with centerOn().
      */
     recenterWhenFullyZoomedOut(camera) {
         if (!this.worldWidth || !this.minZoom) {
@@ -431,8 +432,42 @@ export class GameScene extends Phaser.Scene {
         if (camera.zoom > this.minZoom + 0.0001) {
             return;
         }
-        camera.centerOn(this.worldWidth * 0.5, this.worldHeight * 0.5);
-        this.clampCameraToBounds();
+
+        const cx = this.worldWidth * 0.5;
+        const cy = this.worldHeight * 0.5;
+        let targetX = cx - camera.width * 0.5;
+        let targetY = cy - camera.height * 0.5;
+        if (camera.useBounds && typeof camera.clampX === 'function') {
+            targetX = camera.clampX(targetX);
+            targetY = camera.clampY(targetY);
+        }
+
+        const dist = Phaser.Math.Distance.Between(
+            camera.scrollX,
+            camera.scrollY,
+            targetX,
+            targetY
+        );
+        if (dist < 1.5) {
+            return;
+        }
+
+        if (this._recenterTween) {
+            this._recenterTween.stop();
+            this._recenterTween = null;
+        }
+
+        this._recenterTween = this.tweens.add({
+            targets: camera,
+            scrollX: targetX,
+            scrollY: targetY,
+            duration: 240,
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                this._recenterTween = null;
+                this.clampCameraToBounds();
+            }
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -585,6 +620,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     shutdown() {
+        if (this._recenterTween) {
+            this._recenterTween.stop();
+            this._recenterTween = null;
+        }
         this.game.events.off('hintRequested', this.handleHintRequested, this);
         this.scale.off('resize', this.handleResize, this);
     }
