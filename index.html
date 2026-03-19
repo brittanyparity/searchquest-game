@@ -53,13 +53,6 @@
                 max-width: 90vw;
             }
             
-            #game-and-sidebar-wrapper {
-                display: flex;
-                flex-direction: row;
-                align-items: flex-start;
-                gap: 10px;
-                width: 100%;
-            }
     
             ol, ul {
                 list-style: none;
@@ -87,61 +80,20 @@
             }
 
             #game-container {
-                width: 80%;
-                max-width: 80%;
-                min-height: 300px;
-                /* Constrain to fit within body minus bottom bar */
-                flex: 0 0 auto; /* Don't grow or shrink, use fixed percentage */
-                max-height: calc(85dvh - 106px); /* 85% viewport minus bottom bar (100px) + gap (6px) */
-                max-height: calc(85vh - 106px); /* Fallback */
-                overflow: hidden;
-            }
-            
-            #sidebar-container {
-                flex: 0 0 auto;
-                width: 120px;
-                max-width: 120px;
-                min-height: 300px;
-                border-radius: 24px;
-                background-color: transparent;
-                padding: 12px;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                max-height: calc(85dvh - 106px); /* Match game container height */
-                max-height: calc(85vh - 106px); /* Fallback */
-                overflow: hidden;
-            }
-            
-            #sidebar-content {
                 width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
+                max-width: 100%;
+                min-height: 300px;
+                flex: 1 1 auto;
+                overflow: hidden;
             }
-
-            #bottom-bar-container {
-                min-height: 100px;
-                max-height: 100px;
-                height: 100px;
+            
+            #gallery-container {
+                min-height: 120px;
                 display: flex;
                 flex-direction: column;
                 padding: 12px;
                 position: relative;
-                border-top: 4px solid #e5e7eb; /* Progress bar background at top */
-                flex-shrink: 0; /* Prevent bottom bar from shrinking */
-            }
-            
-            #progress-bar-fill {
-                position: absolute;
-                top: 0;
-                left: 0;
-                height: 4px;
-                background-color: #22c55e;
-                width: 0%;
-                transition: width 0.2s ease;
+                flex-shrink: 0;
             }
             
             /* Hide scrollbar for gallery */
@@ -154,21 +106,16 @@
                 scrollbar-width: none;
             }
 
-            #bottom-bar-content {
+            #gallery-content {
                 width: 100%;
                 height: 100%;
             }
         </style>
     </head>
     <body>
-        <div id="game-and-sidebar-wrapper">
-            <div id="game-container" class="game-container"></div>
-            <div id="sidebar-container">
-                <div id="sidebar-content"></div>
-            </div>
-        </div>
-        <div id="bottom-bar-container" class="game-container">
-            <div id="bottom-bar-content"></div>
+        <div id="game-container" class="game-container"></div>
+        <div id="gallery-container" class="game-container">
+            <div id="gallery-content"></div>
         </div>
         <script src="./phaser.js"></script>
         <script type="module" src="./src/main.js"></script>

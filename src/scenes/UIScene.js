@@ -14,7 +14,7 @@ export class UIScene extends Phaser.Scene {
         
         // Store layout info (will be set by GameScene)
         this.topBarHeight = 0; // No top bar
-        this.bottomBarHeight = Math.max(100, this.cameras.main.height * 0.12);
+        this.galleryHeight = 120; // Gallery container height
         
         // Store objects if they were created before UI was ready
         this.pendingObjects = null;
@@ -51,47 +51,30 @@ export class UIScene extends Phaser.Scene {
 
     buildUI() {
         // Now we build UI using DOM elements in separate containers
-        // No top bar anymore - only bottom bar and hint button
-        console.log('🔨 Building UI (bottom bar and hint button)...');
-        this.buildBottomBar();
-        this.buildHintButton();
+        // Gallery container for items to search for
+        console.log('🔨 Building UI (gallery container)...');
+        this.buildGallery();
         console.log('✅ UI build complete');
     }
 
-    buildBottomBar() {
-        console.log('🔨 Building bottom bar...');
-        const bottomBarContent = document.getElementById('bottom-bar-content');
-        if (!bottomBarContent) {
-            console.error('❌ bottom-bar-content element not found!');
+    buildGallery() {
+        console.log('🔨 Building gallery container...');
+        const galleryContent = document.getElementById('gallery-content');
+        if (!galleryContent) {
+            console.error('❌ gallery-content element not found!');
             return;
         }
-        console.log('✅ Found bottom-bar-content element');
+        console.log('✅ Found gallery-content element');
 
         // Clear existing content
-        bottomBarContent.innerHTML = '';
+        galleryContent.innerHTML = '';
 
         // Get container dimensions
-        const container = document.getElementById('bottom-bar-container');
+        const container = document.getElementById('gallery-container');
         const width = container ? container.clientWidth : 393;
         const height = container ? container.clientHeight : 160;
         const baseWidth = 393;
         const scale = width / baseWidth;
-
-        // Instructions text - bold and centered, smaller font and reduced height
-        const instructions = document.createElement('div');
-        instructions.id = 'instructions-text';
-        instructions.textContent = 'FIND THE OBJECTS:';
-        instructions.style.cssText = `
-            font-family: Arial, sans-serif;
-            font-size: ${Math.max(11, Math.round(12 * scale))}px;
-            font-weight: bold;
-            color: #4b5563;
-            text-align: center;
-            margin-bottom: ${6 * scale}px;
-            line-height: 1.2;
-            height: auto;
-            min-height: auto;
-        `;
 
         // Gallery container with horizontal scrolling (scrollbar hidden)
         const galleryWrapper = document.createElement('div');
@@ -129,16 +112,10 @@ export class UIScene extends Phaser.Scene {
         `;
 
         galleryWrapper.appendChild(gallery);
-        bottomBarContent.appendChild(instructions);
-        bottomBarContent.appendChild(galleryWrapper);
+        galleryContent.appendChild(galleryWrapper);
         
         console.log('✅ Gallery element created with ID: object-gallery');
         console.log('✅ Gallery element in DOM:', !!document.getElementById('object-gallery'));
-        
-        // Progress bar fill (will be updated by timer)
-        const progressBarFill = document.createElement('div');
-        progressBarFill.id = 'progress-bar-fill';
-        container.appendChild(progressBarFill);
         
         // Always populate gallery with all 5 items (regardless of pending objects)
         setTimeout(() => {
@@ -147,7 +124,7 @@ export class UIScene extends Phaser.Scene {
                 console.log('✅ Gallery exists, populating with all items...');
                 this.populateGalleryItems(this.pendingObjects);
             } else {
-                console.error('❌ Gallery still not found after buildBottomBar!');
+                console.error('❌ Gallery still not found after buildGallery!');
             }
         }, 100);
     }
@@ -175,7 +152,7 @@ export class UIScene extends Phaser.Scene {
         // Clear existing gallery
         gallery.innerHTML = '';
 
-        const container = document.getElementById('bottom-bar-container');
+        const container = document.getElementById('gallery-container');
         const width = container ? container.clientWidth : 393;
         const baseWidth = 393;
         const scale = width / baseWidth;
@@ -240,57 +217,14 @@ export class UIScene extends Phaser.Scene {
         console.log(`✓ Gallery populated with ${totalItems} items. Gallery now has ${gallery.children.length} children.`);
     }
     
-    buildHintButton() {
-        // Create hint button in the sidebar container (at the top)
-        const sidebarContent = document.getElementById('sidebar-content');
-        if (!sidebarContent) return;
-        
-        // Remove existing hint button if it exists
-        const existingButton = document.getElementById('hint-button-sidebar');
-        if (existingButton) {
-            existingButton.remove();
-        }
-        
-        const hintButton = document.createElement('button');
-        hintButton.id = 'hint-button-sidebar';
-        hintButton.innerHTML = '💡'; // Light bulb emoji (you can replace with an icon later)
-        hintButton.style.cssText = `
-            width: 40px;
-            height: 40px;
-            background-color: #10b981;
-            color: #ffffff;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            align-self: flex-start;
-        `;
-
-        hintButton.addEventListener('mousedown', () => {
-            hintButton.style.transform = 'scale(0.96)';
-        });
-        hintButton.addEventListener('mouseup', () => {
-            hintButton.style.transform = 'scale(1)';
-        });
-        hintButton.addEventListener('click', () => {
-            this.game.events.emit('hintRequested');
-        });
-
-        sidebarContent.appendChild(hintButton);
-    }
 
     handleResize(gameSize) {
         this.buildUI(); // This will rebuild both bottom bar and hint button
     }
 
-    onLayoutChanged({ topBarHeight, bottomBarHeight, playAreaHeight }) {
+    onLayoutChanged({ topBarHeight, galleryHeight, playAreaHeight }) {
         this.topBarHeight = 0; // No top bar
-        this.bottomBarHeight = bottomBarHeight;
+        this.galleryHeight = galleryHeight || 120;
         this.buildUI();
     }
 

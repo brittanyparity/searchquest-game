@@ -402,29 +402,9 @@ export class GameScene extends Phaser.Scene {
         // Set the game container height to match image height when zoomed out
         if (this.worldWidth && this.worldHeight && imageHeightAtMinZoom > 0) {
             this.playAreaHeight = imageHeightAtMinZoom;
-            
-            // Calculate available space for bottom bar
-            // Use 85% of viewport to leave room for browser UI bars
-            const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-            const usableHeight = viewportHeight * 0.85; // Use 85% of viewport
-            const bodyPadding = 8; // 4px top + 4px bottom
-            const gap = 6; // Gap between containers
-            const availableForBottomBar = usableHeight - bodyPadding - gap - this.playAreaHeight;
-            
-            // Bottom bar minimum height
-            const minBottomBarHeight = Math.max(80, viewportHeight * 0.08);
-            
-            // Use the larger of minimum or available space
-            if (availableForBottomBar >= minBottomBarHeight) {
-                this.bottomBarHeight = availableForBottomBar;
-            } else {
-                this.bottomBarHeight = minBottomBarHeight;
-            }
         } else {
             // Fallback if image not loaded yet
-            const minBottomBarHeight = Math.max(80, fullHeight * 0.08);
-            this.bottomBarHeight = minBottomBarHeight;
-            this.playAreaHeight = fullHeight - this.bottomBarHeight;
+            this.playAreaHeight = fullHeight * 0.7; // Use 70% of available height
         }
 
         // Now the camera viewport uses the full game container (no offset needed)
@@ -439,10 +419,10 @@ export class GameScene extends Phaser.Scene {
         // Update DOM container heights
         this.updateContainerHeights();
         
-        // Emit event so UIScene can update bottom bar height
+        // Emit event so UIScene can update layout
         this.game.events.emit('layoutChanged', {
             topBarHeight: 0, // No top bar
-            bottomBarHeight: this.bottomBarHeight,
+            galleryHeight: 120, // Gallery container will size based on content
             playAreaHeight: this.playAreaHeight
         });
 
@@ -455,7 +435,7 @@ export class GameScene extends Phaser.Scene {
     updateContainerHeights() {
         // Update the actual DOM container heights
         const gameContainer = document.getElementById('game-container');
-        const bottomBarContainer = document.getElementById('bottom-bar-container');
+        const galleryContainer = document.getElementById('gallery-container');
         
         // Set game container max-height to match image height when zoomed out
         if (gameContainer && this.playAreaHeight > 0) {
@@ -464,9 +444,8 @@ export class GameScene extends Phaser.Scene {
             gameContainer.style.height = `${this.playAreaHeight}px`;
         }
         
-        if (bottomBarContainer) {
-            bottomBarContainer.style.height = `${this.bottomBarHeight}px`;
-        }
+        // Gallery container will size itself based on content
+        // No need to set explicit height
     }
 
     handleResize(gameSize) {

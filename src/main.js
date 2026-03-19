@@ -6,19 +6,19 @@ import { UIScene } from './scenes/UIScene.js';
 // Calculate based on the containers directly and viewport
 const getContainerSize = () => {
     const gameContainer = document.getElementById('game-container');
-    const bottomBar = document.getElementById('bottom-bar-container');
+    const galleryContainer = document.getElementById('gallery-container');
     
     if (gameContainer) {
-        // Get actual bottom bar height from DOM (set dynamically)
-        const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 100;
+        // Get actual gallery container height from DOM (set dynamically)
+        const galleryHeight = galleryContainer ? galleryContainer.offsetHeight : 120;
         
         // Calculate available height for game container
         // Use 85% of viewport to leave room for browser UI bars
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const usableHeight = viewportHeight * 0.85; // Use 85% of viewport
         const bodyPadding = 8; // 4px top + 4px bottom
-        const gap = 6; // Gap between game container and bottom bar
-        const availableHeight = usableHeight - bodyPadding - gap - bottomBarHeight;
+        const gap = 6; // Gap between game container and gallery container
+        const availableHeight = usableHeight - bodyPadding - gap - galleryHeight;
         
         // Use 90% of viewport width
         const viewportWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -30,12 +30,12 @@ const getContainerSize = () => {
         return {
             width: Math.min(containerWidth, usableWidth),
             height: Math.max(300, availableHeight),
-            bottomBarHeight: bottomBarHeight,
+            galleryHeight: galleryHeight,
             spacing: gap
         };
     }
     // Fallback
-    return { width: 393, height: 600, bottomBarHeight: 100, spacing: 12 };
+    return { width: 393, height: 600, galleryHeight: 120, spacing: 12 };
 };
 
 const initialSize = getContainerSize();
